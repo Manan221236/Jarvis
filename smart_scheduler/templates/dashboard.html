@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Jarvis AI Assistant{% endblock %}
+
+{% block content %}
+<div class="space-y-10">
+    <!-- Welcome Section -->
+    <div class="text-center mb-16 animate-fade-in">
+        <h1 class="text-5xl md:text-7xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-6 tracking-tight leading-none">
+            Welcome Back! 🤖
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 font-light tracking-wide max-w-3xl mx-auto leading-relaxed">
+            Your AI assistant JARVIS is ready to optimize your productivity
+        </p>
+        <div class="mt-6 text-sm text-gray-500 font-medium">
+            <i class="fas fa-keyboard mr-2"></i>
+            Press <kbd class="px-2 py-1 bg-gray-700 rounded text-xs">Ctrl+N</kbd> to quickly add a new task
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 animate-fade-in-delay">
+        <div class="stat-card group">
+            <div class="stat-number text-blue-400 mb-3 group-hover:scale-110 transition-transform duration-300" id="total-tasks">{{ stats.total }}</div>
+            <div class="stat-label text-gray-400">Total Tasks</div>
+            <div class="mt-3">
+                <i class="fas fa-tasks text-2xl text-blue-400 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card group">
+            <div class="stat-number text-green-400 mb-3 group-hover:scale-110 transition-transform duration-300" id="completed-tasks">{{ stats.completed }}</div>
+            <div class="stat-label text-gray-400">Completed</div>
+            <div class="mt-3">
+                <i class="fas fa-check-circle text-2xl text-green-400 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card group">
+            <div class="stat-number text-yellow-400 mb-3 group-hover:scale-110 transition-transform duration-300" id="pending-tasks">{{ stats.pending }}</div>
+            <div class="stat-label text-gray-400">Pending</div>
+            <div class="mt-3">
+                <i class="fas fa-clock text-2xl text-yellow-400 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+        </div>
+        
+        <div class="stat-card group">
+            <div class="stat-number text-purple-400 mb-3 group-hover:scale-110 transition-transform duration-300" id="completion-rate">{{ stats.completion_rate }}%</div>
+            <div class="stat-label text-gray-400">Success Rate</div>
+            <div class="mt-3">
+                <i class="fas fa-chart-line text-2xl text-purple-400 opacity-60 group-hover:opacity-100 transition-opacity"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="glass p-8 mb-12">
+        <h2 class="section-title text-white mb-8">
+            <i class="fas fa-bolt text-yellow-400 mr-3"></i>
+            Quick Actions
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <button onclick="openModal('task-modal')" class="action-btn rounded-2xl group">
+                <div class="flex items-center">
+                    <div class="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-plus text-white text-xl"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <div class="action-title text-white mb-1">Add New Task</div>
+                        <div class="action-subtitle text-gray-400">Create a new task to track</div>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="window.location.href='/schedule'" class="action-btn rounded-2xl group">
+                <div class="flex items-center">
+                    <div class="w-14 h-14 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-calendar-plus text-white text-xl"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <div class="action-title text-white mb-1">Generate Schedule</div>
+                        <div class="action-subtitle text-gray-400">AI-optimized planning</div>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="window.location.href='/analytics'" class="action-btn rounded-2xl group">
+                <div class="flex items-center">
+                    <div class="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-chart-bar text-white text-xl"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <div class="action-title text-white mb-1">View Analytics</div>
+                        <div class="action-subtitle text-gray-400">Track productivity</div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="glass p-8">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="section-title text-white">
+                <i class="fas fa-list text-blue-400 mr-3"></i>
+                Recent Tasks
+            </h2>
+            <a href="/tasks" class="text-blue-400 hover:text-blue-300 transition-colors font-medium flex items-center group">
+                View All Tasks
+                <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
+        
+        <div id="recent-tasks" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for task in recent_tasks %}
+            <div class="task-card group relative overflow-hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="task-title text-white truncate flex-1">{{ task.title }}</h4>
+                    <span class="priority-{{ task.priority }}">{{ task.priority.upper() }}</span>
+                </div>
+                <p class="task-description text-gray-400 mb-4 line-clamp-2">{{ task.description or 'No description' }}</p>
+                
+                <!-- Progress bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-xs text-gray-400 mb-2">
+                        <span class="font-medium">Progress</span>
+                        <span class="font-mono">{{ task.progress_percentage }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ task.progress_percentage }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                    <span class="status-{{ task.status }}">{{ task.status.replace('_', ' ').title() }}</span>
+                    <div class="flex space-x-3">
+                        {% if task.status != 'completed' %}
+                        <button onclick="completeTaskFromDashboard({{ task.id }})" class="text-green-400 hover:text-green-300 transition-colors p-1 hover:bg-green-400/10 rounded">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        {% endif %}
+                        <button onclick="window.location.href='/tasks'" class="text-blue-400 hover:text-blue-300 transition-colors p-1 hover:bg-blue-400/10 rounded">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Task Creation Modal -->
+<div id="task-modal" class="modal-backdrop hidden">
+    <div class="modal-content max-w-2xl">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h3 class="text-2xl font-bold text-white">Create New Task</h3>
+                <p class="text-gray-400 text-sm">Add a new task to JARVIS</p>
+            </div>
+            <button onclick="closeModal('task-modal')" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form onsubmit="handleTaskSubmit(event)" class="space-y-6">
+            <div>
+                <label class="form-label">Task Title *</label>
+                <input type="text" name="title" required class="form-input w-full" placeholder="Enter task title...">
+            </div>
+            
+            <div>
+                <label class="form-label">Description</label>
+                <textarea name="description" rows="4" class="form-input w-full" placeholder="Describe your task..."></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select w-full">
+                        <option value="low">🟢 Low</option>
+                        <option value="medium" selected>🟡 Medium</option>
+                        <option value="high">🟠 High</option>
+                        <option value="urgent">🔴 Urgent</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label">Duration (minutes)</label>
+                    <input type="number" name="estimated_duration" class="form-input w-full" placeholder="30" min="5" max="480">
+                </div>
+                
+                <div>
+                    <label class="form-label">Category</label>
+                    <input type="text" name="category" class="form-input w-full" placeholder="work, study, personal...">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 pt-6 border-t border-white/10">
+                <button type="button" onclick="closeModal('task-modal')" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Create Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Dashboard-specific functions
+function completeTaskFromDashboard(taskId) {
+    fetch(`/api/tasks/${taskId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(() => {
+        showToast('Task completed! 🎉', 'success');
+        setTimeout(() => location.reload(), 1000);
+    })
+    .catch(() => showToast('Failed to complete task', 'error'));
+}
+
+function handleTaskSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const taskData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        priority: formData.get('priority'),
+        category: formData.get('category'),
+        estimated_duration: parseInt(formData.get('estimated_duration')) || null
+    };
+    
+    fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(taskData)
+    })
+    .then(response => response.json())
+    .then(() => {
+        showToast('Task created! 🎉', 'success');
+        closeModal('task-modal');
+        setTimeout(() => location.reload(), 1000);
+    })
+    .catch(() => showToast('Failed to create task', 'error'));
+}
+
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    const colors = {
+        'success': 'bg-green-600',
+        'error': 'bg-red-600',
+        'info': 'bg-blue-600'
+    };
+    toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3`;
+    toast.innerHTML = `<span>${message}</span>`;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

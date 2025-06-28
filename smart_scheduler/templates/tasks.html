@@ -1,0 +1,650 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks - Jarvis AI Assistant{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Task Management</h1>
+            <p class="text-gray-400 text-lg">Organize tasks with JARVIS intelligence</p>
+        </div>
+        <button onclick="openTaskModal()" class="btn-primary">
+            <i class="fas fa-plus mr-2"></i>Add New Task
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass p-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="form-label">Search Tasks</label>
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        class="form-input w-full pl-10" 
+                        placeholder="Search tasks..."
+                        value="{{ request.query_params.get('search', '') }}"
+                        onkeyup="handleSearch()"
+                    >
+                    <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                </div>
+            </div>
+            
+            <div>
+                <label class="form-label">Status</label>
+                <select id="status-filter" onchange="applyFilters()" class="form-select w-full">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {{ 'selected' if request.query_params.get('status') == 'pending' else '' }}>Pending</option>
+                    <option value="in_progress" {{ 'selected' if request.query_params.get('status') == 'in_progress' else '' }}>In Progress</option>
+                    <option value="completed" {{ 'selected' if request.query_params.get('status') == 'completed' else '' }}>Completed</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="form-label">Priority</label>
+                <select id="priority-filter" onchange="applyFilters()" class="form-select w-full">
+                    <option value="">All Priorities</option>
+                    <option value="low" {{ 'selected' if request.query_params.get('priority') == 'low' else '' }}>🟢 Low</option>
+                    <option value="medium" {{ 'selected' if request.query_params.get('priority') == 'medium' else '' }}>🟡 Medium</option>
+                    <option value="high" {{ 'selected' if request.query_params.get('priority') == 'high' else '' }}>🟠 High</option>
+                    <option value="urgent" {{ 'selected' if request.query_params.get('priority') == 'urgent' else '' }}>🔴 Urgent</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="form-label">Category</label>
+                <select id="category-filter" onchange="applyFilters()" class="form-select w-full">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}" {{ 'selected' if request.query_params.get('category') == category else '' }}>{{ category.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="tasks-container">
+        {% for task in tasks %}
+        <div class="task-card group relative overflow-hidden" data-task-id="{{ task.id }}">
+            <!-- Task Header -->
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1 min-w-0">
+                    <h3 class="task-title text-white mb-1">{{ task.title }}</h3>
+                    <p class="text-sm text-gray-500 font-mono">ID: {{ task.id }} • {{ task.created_at.strftime('%b %d, %Y') }}</p>
+                </div>
+                <span class="priority-{{ task.priority }}">{{ task.priority.upper() }}</span>
+            </div>
+
+            <!-- Description -->
+            {% if task.description %}
+            <p class="task-description text-gray-300 text-sm mb-4 line-clamp-3">{{ task.description }}</p>
+            {% endif %}
+
+            <!-- Meta Info -->
+            <div class="space-y-2 mb-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Status:</span>
+                    <span class="status-{{ task.status }}">
+                        <i class="{{ get_status_icon(task.status) }} mr-1"></i>
+                        {{ task.status.replace('_', ' ').title() }}
+                    </span>
+                </div>
+                
+                {% if task.category %}
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Category:</span>
+                    <span class="text-blue-300">{{ task.category.title() }}</span>
+                </div>
+                {% endif %}
+                
+                {% if task.estimated_duration %}
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Duration:</span>
+                    <span class="text-purple-300">{{ format_duration(task.estimated_duration) }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Progress -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm text-gray-400 mb-2">
+                    <span>Progress</span>
+                    <span>{{ task.progress_percentage }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ task.progress_percentage }}%"></div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+                <div class="flex space-x-2">
+                    {% if task.status != 'completed' %}
+                    <button 
+                        onclick="completeTask({{ task.id }})" 
+                        class="text-green-400 hover:text-green-300 p-2 hover:bg-green-400/10 rounded transition-all duration-200"
+                        title="Mark as complete"
+                        id="complete-btn-{{ task.id }}"
+                    >
+                        <i class="fas fa-check"></i>
+                    </button>
+                    {% endif %}
+                    
+                    <button 
+                        onclick="editTask({{ task.id }})" 
+                        class="text-blue-400 hover:text-blue-300 p-2 hover:bg-blue-400/10 rounded transition-all duration-200"
+                        title="Edit task"
+                        id="edit-btn-{{ task.id }}"
+                    >
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    
+                    <button 
+                        onclick="deleteTask({{ task.id }})" 
+                        class="text-red-400 hover:text-red-300 p-2 hover:bg-red-400/10 rounded transition-all duration-200"
+                        title="Delete task"
+                        id="delete-btn-{{ task.id }}"
+                    >
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <span class="text-xs text-gray-500 font-mono">#{{ task.id }}</span>
+            </div>
+
+            <!-- Hover overlay -->
+            <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    {% if not tasks %}
+    <div class="text-center py-16">
+        <div class="glass p-12 max-w-md mx-auto">
+            <div class="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-robot text-3xl text-white"></i>
+            </div>
+            <h3 class="text-2xl font-semibold text-white mb-3">No tasks found</h3>
+            <p class="text-gray-400 mb-8 leading-relaxed">Let JARVIS help you get organized by creating your first task.</p>
+            <button onclick="openTaskModal()" class="btn-primary">
+                <i class="fas fa-plus mr-2"></i>Create Your First Task
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Task Modal -->
+<div id="task-modal" class="modal-backdrop hidden">
+    <div class="modal-content max-w-2xl">
+        <div class="flex justify-between items-center mb-8">
+            <div>
+                <h3 class="text-2xl font-bold text-white" id="modal-title">Create New Task</h3>
+                <p class="text-gray-400 text-sm">Add task to JARVIS system</p>
+            </div>
+            <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded transition-colors">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form onsubmit="handleTaskSubmit(event)" id="task-form" class="space-y-6">
+            <input type="hidden" name="task_id" id="task-id">
+            
+            <div>
+                <label class="form-label">Task Title *</label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    id="task-title" 
+                    required 
+                    class="form-input w-full" 
+                    placeholder="Enter a clear, actionable task title..."
+                >
+            </div>
+            
+            <div>
+                <label class="form-label">Description</label>
+                <textarea 
+                    name="description" 
+                    id="task-description" 
+                    rows="4" 
+                    class="form-input w-full" 
+                    placeholder="Describe what needs to be accomplished..."
+                ></textarea>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="form-label">Priority</label>
+                    <select name="priority" id="task-priority" class="form-select w-full">
+                        <option value="low">�� Low</option>
+                        <option value="medium" selected>🟡 Medium</option>
+                        <option value="high">🟠 High</option>
+                        <option value="urgent">�� Urgent</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="form-label">Category</label>
+                    <input 
+                        type="text" 
+                        name="category" 
+                        id="task-category" 
+                        class="form-input w-full" 
+                        placeholder="work, study, personal..."
+                        list="category-suggestions"
+                    >
+                    <datalist id="category-suggestions">
+                        {% for category in categories %}
+                        <option value="{{ category }}">
+                        {% endfor %}
+                        <option value="work">
+                        <option value="study">
+                        <option value="personal">
+                        <option value="health">
+                        <option value="learning">
+                        <option value="development">
+                    </datalist>
+                </div>
+                
+                <div>
+                    <label class="form-label">Duration (minutes)</label>
+                    <input 
+                        type="number" 
+                        name="estimated_duration" 
+                        id="task-duration" 
+                        class="form-input w-full" 
+                        placeholder="30" 
+                        min="5" 
+                        max="480"
+                    >
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 pt-6 border-t border-white/10">
+                <button type="button" onclick="closeTaskModal()" class="btn-secondary">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="submit" class="btn-primary" id="submit-btn">
+                    <i class="fas fa-plus mr-2"></i>Create Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="modal-backdrop hidden">
+    <div class="modal-content max-w-md">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-red-100/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Delete Task</h3>
+            <p class="text-gray-400 mb-8 leading-relaxed">Are you sure you want to delete this task? This action cannot be undone and all associated data will be permanently removed.</p>
+            <div class="flex justify-center space-x-4">
+                <button onclick="closeDeleteModal()" class="btn-secondary">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button onclick="confirmDeleteTask()" class="btn-danger" id="confirm-delete-btn">
+                    <i class="fas fa-trash mr-2"></i>Delete Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let taskToDelete = null;
+let isEditing = false;
+
+// Utility functions
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    const colors = {
+        'success': 'bg-green-600',
+        'error': 'bg-red-600',
+        'warning': 'bg-yellow-600',
+        'info': 'bg-blue-600'
+    };
+    
+    const icons = {
+        'success': 'fas fa-check-circle',
+        'error': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    };
+    
+    toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3 transform translate-x-full transition-transform duration-300`;
+    toast.innerHTML = `
+        <i class="${icons[type]}"></i>
+        <span class="font-medium">${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Auto remove
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+// Filter functions
+function applyFilters() {
+    const status = document.getElementById('status-filter').value;
+    const priority = document.getElementById('priority-filter').value;
+    const category = document.getElementById('category-filter').value;
+    const search = document.getElementById('search-input').value;
+    
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (priority) params.set('priority', priority);
+    if (category) params.set('category', category);
+    if (search) params.set('search', search);
+    
+    window.location.search = params.toString();
+}
+
+const handleSearch = debounce(applyFilters, 500);
+
+// Task management functions
+async function completeTask(taskId) {
+    const button = document.getElementById(`complete-btn-${taskId}`);
+    if (!button) return;
+    
+    const originalHTML = button.innerHTML;
+    
+    try {
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.disabled = true;
+        
+        const response = await fetch(`/api/tasks/${taskId}/complete`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        showToast('Task completed successfully! 🎉', 'success');
+        
+        // Update UI immediately
+        const taskCard = button.closest('.task-card');
+        if (taskCard) {
+            taskCard.style.opacity = '0.7';
+            taskCard.style.transform = 'scale(0.98)';
+        }
+        
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error completing task:', error);
+        showToast('Failed to complete task. Please try again.', 'error');
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+    }
+}
+
+async function editTask(taskId) {
+    try {
+        showToast('Loading task details...', 'info', 2000);
+        
+        const response = await fetch(`/api/tasks/${taskId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const task = await response.json();
+        
+        // Set editing mode
+        isEditing = true;
+        
+        // Update modal title and button
+        document.getElementById('modal-title').textContent = 'Edit Task';
+        document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save mr-2"></i>Update Task';
+        
+        // Populate form fields
+        document.getElementById('task-id').value = task.id;
+        document.getElementById('task-title').value = task.title;
+        document.getElementById('task-description').value = task.description || '';
+        document.getElementById('task-priority').value = task.priority;
+        document.getElementById('task-category').value = task.category || '';
+        document.getElementById('task-duration').value = task.estimated_duration || '';
+        
+        // Open modal
+        openTaskModal();
+        
+    } catch (error) {
+        console.error('Error loading task:', error);
+        showToast('Failed to load task details. Please try again.', 'error');
+    }
+}
+
+function deleteTask(taskId) {
+    taskToDelete = taskId;
+    openDeleteModal();
+}
+
+async function confirmDeleteTask() {
+    if (!taskToDelete) return;
+    
+    const deleteBtn = document.getElementById('confirm-delete-btn');
+    const originalHTML = deleteBtn.innerHTML;
+    
+    try {
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+        deleteBtn.disabled = true;
+        
+        const response = await fetch(`/api/tasks/${taskToDelete}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        showToast('Task deleted successfully', 'success');
+        closeDeleteModal();
+        
+        // Animate task removal
+        const taskCard = document.querySelector(`[data-task-id="${taskToDelete}"]`);
+        if (taskCard) {
+            taskCard.style.transform = 'scale(0) rotate(5deg)';
+            taskCard.style.opacity = '0';
+            setTimeout(() => {
+                taskCard.remove();
+            }, 300);
+        }
+        
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        showToast('Failed to delete task. Please try again.', 'error');
+        deleteBtn.innerHTML = originalHTML;
+        deleteBtn.disabled = false;
+    }
+}
+
+// Form submission
+async function handleTaskSubmit(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const submitBtn = document.getElementById('submit-btn');
+    const originalHTML = submitBtn.innerHTML;
+    
+    try {
+        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${isEditing ? 'Updating...' : 'Creating...'}`;
+        submitBtn.disabled = true;
+        
+        const taskData = {
+            title: formData.get('title'),
+            description: formData.get('description') || null,
+            priority: formData.get('priority'),
+            category: formData.get('category') || null,
+            estimated_duration: parseInt(formData.get('estimated_duration')) || null
+        };
+        
+        const taskId = formData.get('task_id');
+        const url = isEditing ? `/api/tasks/${taskId}` : '/api/tasks';
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(taskData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        showToast(isEditing ? 'Task updated successfully! ✨' : 'Task created successfully! 🎉', 'success');
+        
+        closeTaskModal();
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Error saving task:', error);
+        showToast('Failed to save task. Please try again.', 'error');
+        submitBtn.innerHTML = originalHTML;
+        submitBtn.disabled = false;
+    }
+}
+
+// Modal functions
+function openTaskModal() {
+    const modal = document.getElementById('task-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Focus first input
+        setTimeout(() => {
+            const titleInput = document.getElementById('task-title');
+            if (titleInput) titleInput.focus();
+        }, 100);
+    }
+}
+
+function closeTaskModal() {
+    const modal = document.getElementById('task-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Reset form
+    const form = document.getElementById('task-form');
+    if (form) form.reset();
+    
+    // Reset modal state
+    document.getElementById('task-id').value = '';
+    document.getElementById('modal-title').textContent = 'Create New Task';
+    document.getElementById('submit-btn').innerHTML = '<i class="fas fa-plus mr-2"></i>Create Task';
+    isEditing = false;
+}
+
+function openDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    taskToDelete = null;
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate task cards on load
+    const taskCards = document.querySelectorAll('.task-card');
+    taskCards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Escape to close modals
+    if (e.key === 'Escape') {
+        closeTaskModal();
+        closeDeleteModal();
+    }
+    
+    // Ctrl/Cmd + N to create new task
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        openTaskModal();
+    }
+});
+
+// Close modals when clicking backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        if (e.target.id === 'task-modal') {
+            closeTaskModal();
+        } else if (e.target.id === 'delete-modal') {
+            closeDeleteModal();
+        }
+    }
+});
+</script>
+{% endblock %}

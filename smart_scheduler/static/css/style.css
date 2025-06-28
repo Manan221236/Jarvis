@@ -1,0 +1,1063 @@
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Custom animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.5); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+
+/* Base typography */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.01em;
+}
+
+/* Enhanced headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Navigation styles */
+.nav-link {
+    @apply text-gray-300 hover:text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:bg-white/10 hover:backdrop-blur-lg;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+.nav-link.active {
+    @apply text-white bg-gradient-to-r from-blue-600/40 to-purple-600/40 backdrop-blur-lg border border-white/20;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+/* Enhanced glass morphism effects */
+.glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass:hover {
+    @apply bg-white/10 border-white/20;
+    transform: translateY(-2px);
+    box-shadow: 
+        0 20px 50px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-dark {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10 rounded-2xl;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced button styles */
+.btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
+}
+
+.btn-secondary {
+    @apply bg-gray-700/50 hover:bg-gray-600/50 backdrop-blur-lg border border-gray-600/50 hover:border-gray-500/50 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+}
+
+.btn-success {
+    @apply bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+    font-weight: 600;
+}
+
+.btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+    font-weight: 600;
+}
+
+/* Enhanced task card styles */
+.task-card {
+    @apply glass p-6 hover:bg-white/10 transition-all duration-500 transform hover:-translate-y-2 cursor-pointer;
+    animation: fadeIn 0.6s ease-out;
+}
+
+.task-card:hover {
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced priority badges with better typography */
+.priority-low {
+    @apply bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/40 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.priority-medium {
+    @apply bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-300 border border-yellow-500/40 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.priority-high {
+    @apply bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 border border-orange-500/40 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.priority-urgent {
+    @apply bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-300 border border-red-500/40 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    animation: pulse-glow 2s infinite;
+}
+
+/* Enhanced status badges */
+.status-pending {
+    @apply bg-gradient-to-r from-blue-500/20 to-cyan-500/20 text-blue-300 border border-blue-500/40 px-3 py-1 rounded-full text-xs font-medium;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    font-size: 0.75rem;
+}
+
+.status-in_progress {
+    @apply bg-gradient-to-r from-purple-500/20 to-indigo-500/20 text-purple-300 border border-purple-500/40 px-3 py-1 rounded-full text-xs font-medium;
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
+    font-size: 0.75rem;
+}
+
+.status-completed {
+    @apply bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 border border-green-500/40 px-3 py-1 rounded-full text-xs font-medium;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    font-size: 0.75rem;
+}
+
+.status-cancelled {
+    @apply bg-gradient-to-r from-gray-500/20 to-slate-500/20 text-gray-300 border border-gray-500/40 px-3 py-1 rounded-full text-xs font-medium;
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.15);
+    font-size: 0.75rem;
+}
+
+/* Enhanced form styles */
+.form-input {
+    @apply glass px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.95rem;
+}
+
+.form-input:focus {
+    @apply bg-white/10 border-blue-500/50;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-select {
+    @apply glass px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 0.95rem;
+}
+
+.form-label {
+    @apply block text-sm font-semibold text-gray-300 mb-2;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* Enhanced modal styles */
+.modal-backdrop {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+    @apply glass-dark max-w-lg w-full p-8 animate-slide-up;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Enhanced progress bars */
+.progress-bar {
+    @apply w-full bg-gray-700/50 rounded-full h-2 overflow-hidden backdrop-blur-sm;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-fill {
+    @apply h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transition-all duration-700;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Enhanced statistics cards */
+.stat-card {
+    @apply glass p-6 text-center transform transition-all duration-500 hover:scale-105 cursor-pointer;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.stat-card:hover {
+    animation: glow 2s infinite;
+}
+
+.stat-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 2.5rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.stat-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+    opacity: 0.8;
+}
+
+/* Enhanced action buttons */
+.action-btn {
+    @apply glass p-6 text-left transition-all duration-300 transform hover:scale-105 hover:bg-white/10 cursor-pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-btn:hover {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.action-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.25rem;
+}
+
+.action-subtitle {
+    font-weight: 400;
+    font-size: 0.85rem;
+    opacity: 0.7;
+    letter-spacing: -0.005em;
+}
+
+/* Enhanced tooltip styles */
+.tooltip {
+    @apply invisible absolute z-10 py-2 px-3 text-xs font-medium text-white bg-gray-900/90 backdrop-blur-lg rounded-lg shadow-lg opacity-0 transition-all duration-300;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+}
+
+.tooltip-trigger:hover .tooltip {
+    @apply visible opacity-100;
+}
+
+/* Enhanced loading spinner */
+.spinner {
+    @apply animate-spin rounded-full h-8 w-8 border-2 border-gray-600 border-t-blue-500;
+}
+
+/* Enhanced section headings */
+.section-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 0.75rem;
+    font-size: 1.2rem;
+}
+
+/* Enhanced productivity tips */
+.tip-card {
+    @apply p-4 rounded-xl border transition-all duration-300 hover:scale-105;
+    backdrop-filter: blur(10px);
+}
+
+.tip-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.tip-content {
+    font-weight: 400;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+/* Enhanced recent tasks section */
+.task-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.task-description {
+    font-weight: 400;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    opacity: 0.8;
+}
+
+.task-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.6;
+}
+
+/* Custom scrollbar with better styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(147, 51, 234, 0.3));
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(147, 51, 234, 0.5));
+}
+
+/* Text utilities */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+/* Line clamp utility */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Responsive design helpers */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+    
+    .section-title {
+        font-size: 1.25rem;
+    }
+    
+    .modal-content {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+}
+
+/* Enhanced animations */
+.animate-fade-in-delay {
+    animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+.animate-fade-in-delay-2 {
+    animation: fadeIn 0.8s ease-out 0.4s both;
+}
+
+.animate-fade-in-delay-3 {
+    animation: fadeIn 0.8s ease-out 0.6s both;
+}
+
+/* Focus states for accessibility */
+.focus-visible:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900;
+}
+
+/* Enhanced badge group for multiple badges */
+.badge-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Enhanced navigation active state */
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 1px;
+}
+
+/* Fix for priority badge spacing and alignment */
+.badge-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+/* Enhanced priority badges with better contrast and typography */
+.priority-low {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+}
+
+.priority-medium {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(251, 191, 36, 0.2));
+    color: #fde047;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+}
+
+.priority-high {
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(251, 146, 60, 0.2));
+    color: #fdba74;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+}
+
+.priority-urgent {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(248, 113, 113, 0.3));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    backdrop-filter: blur(10px);
+    animation: pulse-glow 2s infinite;
+}
+
+/* Enhanced status badges with consistent styling */
+.status-pending {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(99, 102, 241, 0.2));
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-in_progress {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(168, 85, 247, 0.2));
+    color: #c4b5fd;
+    border: 1px solid rgba(147, 51, 234, 0.4);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-completed {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.status-cancelled {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(156, 163, 175, 0.2));
+    color: #d1d5db;
+    border: 1px solid rgba(107, 114, 128, 0.4);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* Better task card layout and structure */
+.task-card {
+    position: relative;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.task-card:hover::before {
+    opacity: 1;
+}
+
+.task-card .task-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.task-card .task-description {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Task meta information styling */
+.task-meta-container {
+    margin: 1rem 0;
+    space-y: 0.5rem;
+}
+
+.task-meta-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.task-meta-label {
+    display: flex;
+    align-items: center;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.task-meta-label i {
+    margin-right: 0.5rem;
+    width: 1rem;
+    font-size: 0.75rem;
+}
+
+.task-meta-value {
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Enhanced progress bar styling */
+.progress-container {
+    margin: 1rem 0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.progress-percentage {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.progress-bar {
+    background: rgba(55, 65, 81, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    height: 6px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    border-radius: 9999px;
+    transition: width 0.7s ease;
+    height: 100%;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Task action buttons styling */
+.task-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
+}
+
+.task-actions-left {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.task-action-btn {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.task-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 0.5rem;
+}
+
+.task-action-btn:hover::before {
+    opacity: 0.1;
+}
+
+.task-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.task-action-btn i {
+    position: relative;
+    z-index: 1;
+}
+
+.task-id-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: #6b7280;
+    font-weight: 600;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced hover effects for task cards */
+.task-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.task-card:hover .task-title {
+    color: #60a5fa;
+}
+
+/* Form styling improvements */
+.form-label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    font-size: 0.875rem;
+    width: 1rem;
+}
+
+.form-input, .form-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.form-input::placeholder {
+    color: #9ca3af;
+}
+
+/* Enhanced modal styling */
+.modal-backdrop {
+    z-index: 9999;
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.modal-content {
+    z-index: 10000;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .task-card {
+        min-height: auto;
+        padding: 1rem;
+    }
+    
+    .task-title {
+        font-size: 1rem;
+    }
+    
+    .task-meta-item {
+        font-size: 0.8rem;
+    }
+    
+    .priority-low,
+    .priority-medium,
+    .priority-high,
+    .priority-urgent {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.6rem;
+    }
+    
+    .status-pending,
+    .status-in_progress,
+    .status-completed,
+    .status-cancelled {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+}
+
+/* Grid layout improvements */
+@media (min-width: 1024px) {
+    #tasks-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (min-width: 1280px) {
+    #tasks-container {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+    }
+}
+
+@media (min-width: 1536px) {
+    #tasks-container {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid transparent;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 10;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced button states */
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+button:disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Filter container improvements */
+.filter-container {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .filter-container {
+        padding: 1rem;
+    }
+}
+/* Performance-optimized CSS - append to existing style.css */
+
+/* Use GPU acceleration for animations */
+.task-card,
+.stat-card,
+.action-btn,
+.modal-content {
+    will-change: transform;
+    transform: translateZ(0); /* Force GPU layer */
+}
+
+/* Optimize hover effects */
+.task-card:hover,
+.stat-card:hover,
+.action-btn:hover {
+    transform: translateY(-2px) translateZ(0);
+}
+
+/* Reduce animation complexity */
+.animate-fade-in {
+    animation: fadeInOptimized 0.3s ease-out forwards;
+}
+
+@keyframes fadeInOptimized {
+    from {
+        opacity: 0;
+        transform: translateY(10px) translateZ(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) translateZ(0);
+    }
+}
+
+/* Optimize progress bar animation */
+.progress-fill {
+    transition: width 0.5s ease;
+    will-change: width;
+}
+
+/* Reduce backdrop blur for better performance */
+.glass {
+    backdrop-filter: blur(10px);
+}
+
+.modal-backdrop {
+    backdrop-filter: blur(8px);
+}
+
+/* Optimize button transitions */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
+}
+
+/* Remove expensive animations on mobile */
+@media (max-width: 768px) {
+    .task-card:hover,
+    .stat-card:hover,
+    .action-btn:hover {
+        transform: none;
+    }
+    
+    .glass,
+    .modal-backdrop {
+        backdrop-filter: none;
+        background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .animate-fade-in {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Optimize toast animations */
+.toast-enter {
+    transform: translateX(100%) translateZ(0);
+    transition: transform 0.3s ease;
+}
+
+.toast-enter-active {
+    transform: translateX(0) translateZ(0);
+}
