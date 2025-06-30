@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Jarvis AI Assistant{% endblock %}</title>
     
-    <!-- Preconnect to Google Fonts for performance -->
+    <!-- Preconnect to improve performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Tailwind CSS for modern styling -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -18,7 +18,6 @@
                 extend: {
                     fontFamily: {
                         'sans': ['Inter', 'system-ui', 'sans-serif'],
-                        'mono': ['JetBrains Mono', 'monospace'],
                     },
                     colors: {
                         primary: {
@@ -27,32 +26,12 @@
                             600: '#2563eb',
                             700: '#1d4ed8',
                             900: '#1e3a8a'
-                        },
-                        gray: {
-                            800: '#1f2937',
-                            900: '#111827'
                         }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
                         'slide-up': 'slideUp 0.3s ease-out',
-                        'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'glow': 'glow 2s infinite',
-                        'modal-in': 'modalIn 0.3s ease-out',
-                        'backdrop-in': 'backdropIn 0.3s ease-out'
-                    },
-                    backdropBlur: {
-                        'xs': '2px',
-                    },
-                    keyframes: {
-                        modalIn: {
-                            '0%': { opacity: '0', transform: 'scale(0.95) translateY(-10px)' },
-                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
-                        },
-                        backdropIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        }
+                        'pulse-soft': 'pulse 3s infinite'
                     }
                 }
             }
@@ -62,25 +41,72 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <!-- Custom styles -->
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Glass morphism effects */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.7);
+        }
+        
+        /* Focus styles for accessibility */
+        .focus-visible:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+    </style>
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white font-sans antialiased">
-    <!-- Enhanced background effects -->
+    <!-- Background effects -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-soft"></div>
         <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-soft"></div>
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-soft"></div>
     </div>
 
-    <!-- Enhanced Navigation with Jarvis Branding -->
+    <!-- Navigation -->
     <nav class="relative z-10 bg-black/30 backdrop-blur-xl border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
                 <div class="flex items-center space-x-4">
                     <div class="flex-shrink-0">
-                        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-robot text-white text-lg"></i>
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-xl"></i>
                         </div>
                     </div>
                     <div>
@@ -91,182 +117,259 @@
                     </div>
                 </div>
                 
+                <!-- Navigation Links -->
                 <div class="flex items-center space-x-2">
-                    <a href="/" class="nav-link {% if request.url.path == '/' %}active{% endif %}">
-                        <i class="fas fa-home mr-2"></i>Dashboard
+                    <a href="/" class="nav-link group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/10 {% if request.url.path == '/' %}bg-white/10 text-blue-400{% else %}text-gray-300 hover:text-white{% endif %}">
+                        <i class="fas fa-home mr-2 group-hover:scale-110 transition-transform"></i>Dashboard
                     </a>
-                    <a href="/tasks" class="nav-link {% if '/tasks' in request.url.path %}active{% endif %}">
-                        <i class="fas fa-tasks mr-2"></i>Tasks
+                    <a href="/tasks" class="nav-link group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/10 {% if '/tasks' in request.url.path %}bg-white/10 text-blue-400{% else %}text-gray-300 hover:text-white{% endif %}">
+                        <i class="fas fa-tasks mr-2 group-hover:scale-110 transition-transform"></i>Tasks
                     </a>
-                    <a href="/schedule" class="nav-link {% if '/schedule' in request.url.path %}active{% endif %}">
-                        <i class="fas fa-calendar-alt mr-2"></i>Schedule
+                    <a href="/schedule" class="nav-link group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/10 {% if '/schedule' in request.url.path %}bg-white/10 text-blue-400{% else %}text-gray-300 hover:text-white{% endif %}">
+                        <i class="fas fa-calendar-alt mr-2 group-hover:scale-110 transition-transform"></i>Schedule
                     </a>
-                    <a href="/analytics" class="nav-link {% if '/analytics' in request.url.path %}active{% endif %}">
-                        <i class="fas fa-chart-line mr-2"></i>Analytics
+                    <a href="/analytics" class="nav-link group flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-white/10 {% if '/analytics' in request.url.path %}bg-white/10 text-blue-400{% else %}text-gray-300 hover:text-white{% endif %}">
+                        <i class="fas fa-chart-line mr-2 group-hover:scale-110 transition-transform"></i>Analytics
                     </a>
+                    
+                    <!-- API Status Indicator -->
+                    <div class="ml-4 flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-green-400 font-medium">Online</span>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Enhanced Toast Notifications Container -->
-    <div id="toast-container" class="fixed top-6 right-6 z-[9999] space-y-3 max-w-sm"></div>
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-white/10 bg-black/20 backdrop-blur-xl mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-white font-semibold">Jarvis AI Assistant</h3>
+                        <p class="text-xs text-gray-400">Your intelligent productivity companion</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-6 text-sm text-gray-400">
+                    <a href="/api/health" class="hover:text-blue-400 transition-colors">
+                        <i class="fas fa-heartbeat mr-1"></i>API Status
+                    </a>
+                    <a href="/docs" class="hover:text-blue-400 transition-colors">
+                        <i class="fas fa-book mr-1"></i>Documentation
+                    </a>
+                    <span class="text-xs">
+                        <i class="fas fa-code mr-1"></i>Built with FastAPI & ❤️
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    <!-- Scripts -->
-    <script src="{{ url_for('static', path='/js/app.js') }}"></script>
-    
-    <!-- Performance optimized scripts -->
+    <!-- Global Scripts -->
     <script>
-        // Optimize page load performance
+        // Global utilities
+        window.jarvisUtils = {
+            // Show toast notification
+            showToast: function(message, type = 'info', duration = 3000) {
+                const toastContainer = document.getElementById('toast-container') || this.createToastContainer();
+                
+                const toast = document.createElement('div');
+                const colors = {
+                    success: 'bg-green-600 border-green-500',
+                    error: 'bg-red-600 border-red-500',
+                    info: 'bg-blue-600 border-blue-500',
+                    warning: 'bg-yellow-600 border-yellow-500'
+                };
+                
+                const icons = {
+                    success: 'fa-check-circle',
+                    error: 'fa-exclamation-circle',
+                    info: 'fa-info-circle',
+                    warning: 'fa-exclamation-triangle'
+                };
+                
+                toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3 border-l-4 transform translate-x-full transition-all duration-300 opacity-0`;
+                toast.innerHTML = `
+                    <i class="fas ${icons[type]} text-lg"></i>
+                    <span class="flex-1">${message}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-4 text-white/70 hover:text-white transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Animate in
+                requestAnimationFrame(() => {
+                    toast.classList.remove('translate-x-full', 'opacity-0');
+                });
+                
+                // Auto remove
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            },
+            
+            // Create toast container if it doesn't exist
+            createToastContainer: function() {
+                const container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'fixed top-6 right-6 z-[9999] space-y-3 max-w-sm';
+                document.body.appendChild(container);
+                return container;
+            },
+            
+            // API helper
+            api: {
+                get: async function(url) {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    return response.json();
+                },
+                
+                post: async function(url, data) {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    return response.json();
+                },
+                
+                put: async function(url, data) {
+                    const response = await fetch(url, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    return response.json();
+                },
+                
+                delete: async function(url) {
+                    const response = await fetch(url, { method: 'DELETE' });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    return response.json();
+                }
+            },
+            
+            // Format duration helper
+            formatDuration: function(minutes) {
+                if (!minutes) return 'Not set';
+                if (minutes < 60) return `${minutes}m`;
+                const hours = Math.floor(minutes / 60);
+                const mins = minutes % 60;
+                return mins ? `${hours}h ${mins}m` : `${hours}h`;
+            },
+            
+            // Debounce helper
+            debounce: function(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+        };
+        
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape key to close modals
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-backdrop:not(.hidden)').forEach(modal => {
+                    modal.classList.add('hidden');
+                });
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Ctrl+/ for help
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                jarvisUtils.showToast('Keyboard Shortcuts: Ctrl+N (New Task), Escape (Close Modal)', 'info', 5000);
+            }
+        });
+        
+        // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            // Use requestAnimationFrame for smooth animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        requestAnimationFrame(() => {
-                            entry.target.style.animationDelay = '0s';
-                            entry.target.classList.add('animate-fade-in');
-                        });
-                        observer.unobserve(entry.target);
+            // Add loading states to forms
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function() {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+                        
+                        // Re-enable after 5 seconds to prevent infinite loading
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }, 5000);
                     }
                 });
-            }, observerOptions);
-
-            // Observe elements with debouncing
-            const elementsToObserve = document.querySelectorAll('.glass, .task-card, .stat-card');
-            elementsToObserve.forEach(el => observer.observe(el));
-
-            // Optimize hover effects with passive listeners
-            document.querySelectorAll('button, .nav-link, .task-card').forEach(el => {
-                el.addEventListener('mouseenter', () => {
-                    // Optimized hover effects
-                }, { passive: true });
             });
-        });
-
-        // Enhanced keyboard shortcuts with better performance
-        document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + K for task modal
-            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-                e.preventDefault();
-                const modal = document.getElementById('task-modal');
-                if (modal && !modal.classList.contains('hidden')) {
-                    closeModal('task-modal');
-                } else {
-                    openModal('task-modal');
-                }
-            }
             
-            // Escape to close modals
-            if (e.key === 'Escape') {
-                const modals = document.querySelectorAll('.modal-backdrop:not(.hidden)');
-                modals.forEach(modal => {
-                    modal.classList.add('hidden');
-                    document.body.style.overflow = 'auto';
+            // Add hover effects to cards
+            document.querySelectorAll('.task-card, .glass').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-4px)';
                 });
-            }
-        });
-
-        // Global modal functions with improved positioning
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                // Ensure modal is properly centered
-                modal.style.display = 'flex';
-                modal.style.alignItems = 'center';
-                modal.style.justifyContent = 'center';
-                modal.style.position = 'fixed';
-                modal.style.top = '0';
-                modal.style.left = '0';
-                modal.style.width = '100%';
-                modal.style.height = '100%';
-                modal.style.zIndex = '9999';
                 
-                modal.classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-                
-                // Add animation classes
-                const modalContent = modal.querySelector('.modal-content');
-                if (modalContent) {
-                    modalContent.classList.add('animate-modal-in');
-                }
-                modal.classList.add('animate-backdrop-in');
-                
-                // Focus first input after animation
-                setTimeout(() => {
-                    const firstInput = modal.querySelector('input, textarea, select');
-                    if (firstInput) firstInput.focus();
-                }, 150);
-            }
-        }
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-                
-                // Reset forms
-                const form = modal.querySelector('form');
-                if (form) form.reset();
-            }
-        }
-
-        // Enhanced toast notifications
-        function showToast(message, type = 'info', duration = 3000) {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            
-            const toast = document.createElement('div');
-            const colors = {
-                'success': 'bg-green-600 border-green-500',
-                'error': 'bg-red-600 border-red-500',
-                'warning': 'bg-yellow-600 border-yellow-500',
-                'info': 'bg-blue-600 border-blue-500'
-            };
-            
-            const icons = {
-                'success': 'fas fa-check-circle',
-                'error': 'fas fa-exclamation-circle',
-                'warning': 'fas fa-exclamation-triangle',
-                'info': 'fas fa-info-circle'
-            };
-            
-            toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl border flex items-center space-x-3 transform translate-x-full transition-all duration-300 backdrop-blur-lg`;
-            toast.innerHTML = `
-                <i class="${icons[type]}"></i>
-                <span class="font-medium flex-1">${message}</span>
-                <button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-            `;
-            
-            container.appendChild(toast);
-            
-            // Animate in
-            requestAnimationFrame(() => {
-                toast.style.transform = 'translateX(0)';
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
             });
             
-            // Auto remove with smooth animation
-            setTimeout(() => {
-                if (toast.parentElement) {
-                    toast.style.transform = 'translateX(100%)';
-                    toast.style.opacity = '0';
-                    setTimeout(() => toast.remove(), 300);
-                }
-            }, duration);
+            // Auto-focus first input in modals
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const modal = mutation.target;
+                        if (!modal.classList.contains('hidden')) {
+                            const firstInput = modal.querySelector('input, textarea, select');
+                            if (firstInput) {
+                                setTimeout(() => firstInput.focus(), 100);
+                            }
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                observer.observe(modal, { attributes: true });
+            });
+        });
+        
+        // Performance optimization
+        if ('serviceWorker' in navigator) {
+            // Register service worker for offline support in the future
+            // navigator.serviceWorker.register('/sw.js');
         }
+        
+        // Add smooth transitions for page navigation
+        window.addEventListener('beforeunload', function() {
+            document.body.style.opacity = '0.8';
+        });
     </script>
+    
+    <!-- Additional page-specific scripts -->
+    {% block scripts %}{% endblock %}
 </body>
 </html>

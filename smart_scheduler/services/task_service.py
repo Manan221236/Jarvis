@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from smart_scheduler.models.task import Task, TaskStatus, TaskPriority
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 class TaskService:
@@ -70,8 +70,26 @@ class TaskService:
             task.status = status
             task.updated_at = datetime.utcnow()
             
+            # Set completion time if marking as completed
             if status == TaskStatus.COMPLETED:
+                task.completed_at = datetime.utcnow()
                 task.progress_percentage = 100.0
+            
+            self.db.commit()
+            self.db.refresh(task)
+        
+        return task
+    
+    def update_task_progress(self, task_id: int, progress: float) -> Optional[Task]:
+        """Update task progress percentage"""
+        task = self.get_task_by_id(task_id)
+        if task:
+            task.progress_percentage = max(0, min(100, progress))
+            task.updated_at = datetime.utcnow()
+            
+            # Auto-complete if 100%
+            if progress >= 100:
+                task.status = TaskStatus.COMPLETED
                 task.completed_at = datetime.utcnow()
             
             self.db.commit()
@@ -88,145 +106,52 @@ class TaskService:
             return True
         return False
     
-    def get_pending_tasks(self) -> List[Task]:
-        """Get all pending tasks"""
-        return self.db.query(Task).filter(
-            Task.status.in_([TaskStatus.PENDING, TaskStatus.IN_PROGRESS])
-        ).order_by(Task.priority.desc(), Task.created_at.asc()).all()
-    
-    def get_task_stats(self) -> dict:
+    def get_task_stats(self) -> Dict[str, Any]:
         """Get task statistics"""
-        total = self.db.query(Task).count()
-        completed = self.db.query(Task).filter(Task.status == TaskStatus.COMPLETED).count()
-        in_progress = self.db.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).count()
-        pending = self.db.query(Task).filter(Task.status == TaskStatus.PENDING).count()
+        total_tasks = self.db.query(Task).count()
         
-        completion_rate = (completed / total * 100) if total > 0 else 0
+        # Count by status
+        pending = self.db.query(Task).filter(Task.status == TaskStatus.PENDING).count()
+        in_progress = self.db.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).count()
+        completed = self.db.query(Task).filter(Task.status == TaskStatus.COMPLETED).count()
+        cancelled = self.db.query(Task).filter(Task.status == TaskStatus.CANCELLED).count()
+        
+        # Count by priority
+        high_priority = self.db.query(Task).filter(
+            Task.priority.in_([TaskPriority.HIGH, TaskPriority.URGENT])
+        ).count()
+        
+        # Calculate completion rate
+        completion_rate = (completed / total_tasks * 100) if total_tasks > 0 else 0
         
         return {
-            "total": total,
-            "completed": completed,
-            "in_progress": in_progress,
+            "total_tasks": total_tasks,
             "pending": pending,
+            "in_progress": in_progress,
+            "completed": completed,
+            "cancelled": cancelled,
+            "high_priority": high_priority,
             "completion_rate": round(completion_rate, 1)
         }
-
-    def update_task(
-        self,
-        task_id: int,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        priority: Optional[TaskPriority] = None,
-        category: Optional[str] = None,
-        estimated_duration: Optional[int] = None,
-        due_date: Optional[datetime] = None,
-        tags: Optional[str] = None
-    ) -> Optional[Task]:
-        """Update an existing task"""
+    
+    def get_tasks_by_due_date(self, days_ahead: int = 7) -> List[Task]:
+        """Get tasks due within specified days"""
+        from datetime import timedelta
         
-        task = self.get_task_by_id(task_id)
-        if not task:
-            return None
+        end_date = datetime.utcnow() + timedelta(days=days_ahead)
         
-        # Update only provided fields
-        if title is not None:
-            task.title = title
-        if description is not None:
-            task.description = description
-        if priority is not None:
-            task.priority = priority
-        if category is not None:
-            task.category = category
-        if estimated_duration is not None:
-            task.estimated_duration = estimated_duration
-        if due_date is not None:
-            task.due_date = due_date
-        if tags is not None:
-            task.tags = tags
+        return self.db.query(Task).filter(
+            Task.due_date <= end_date,
+            Task.status != TaskStatus.COMPLETED,
+            Task.status != TaskStatus.CANCELLED
+        ).order_by(Task.due_date).all()
+    
+    def get_overdue_tasks(self) -> List[Task]:
+        """Get overdue tasks"""
+        now = datetime.utcnow()
         
-        task.updated_at = datetime.utcnow()
-        
-        self.db.commit()
-        self.db.refresh(task)
-        
-        return task
-
-    def update_task(
-        self,
-        task_id: int,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        priority: Optional[TaskPriority] = None,
-        category: Optional[str] = None,
-        estimated_duration: Optional[int] = None,
-        due_date: Optional[datetime] = None,
-        tags: Optional[str] = None
-    ) -> Optional[Task]:
-        """Update an existing task"""
-        
-        task = self.get_task_by_id(task_id)
-        if not task:
-            return None
-        
-        # Update only provided fields
-        if title is not None:
-            task.title = title
-        if description is not None:
-            task.description = description
-        if priority is not None:
-            task.priority = priority
-        if category is not None:
-            task.category = category
-        if estimated_duration is not None:
-            task.estimated_duration = estimated_duration
-        if due_date is not None:
-            task.due_date = due_date
-        if tags is not None:
-            task.tags = tags
-        
-        task.updated_at = datetime.utcnow()
-        
-        self.db.commit()
-        self.db.refresh(task)
-        
-        return task
-
-    def update_task(
-        self,
-        task_id: int,
-        title: Optional[str] = None,
-        description: Optional[str] = None,
-        priority: Optional[TaskPriority] = None,
-        category: Optional[str] = None,
-        estimated_duration: Optional[int] = None,
-        due_date: Optional[datetime] = None,
-        tags: Optional[str] = None
-    ) -> Optional[Task]:
-        """Update an existing task"""
-        
-        task = self.get_task_by_id(task_id)
-        if not task:
-            return None
-        
-        # Update only provided fields
-        if title is not None:
-            task.title = title
-        if description is not None:
-            task.description = description
-        if priority is not None:
-            task.priority = priority
-        if category is not None:
-            task.category = category
-        if estimated_duration is not None:
-            task.estimated_duration = estimated_duration
-        if due_date is not None:
-            task.due_date = due_date
-        if tags is not None:
-            task.tags = tags
-        
-        task.updated_at = datetime.utcnow()
-        
-        self.db.commit()
-        self.db.refresh(task)
-        
-        return task
+        return self.db.query(Task).filter(
+            Task.due_date < now,
+            Task.status != TaskStatus.COMPLETED,
+            Task.status != TaskStatus.CANCELLED
+        ).order_by(Task.due_date).all()
