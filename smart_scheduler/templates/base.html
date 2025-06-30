@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Smart Study Scheduler{% endblock %}</title>
+    <title>{% block title %}Jarvis AI Assistant{% endblock %}</title>
     
     <!-- Preconnect to Google Fonts for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,13 +34,25 @@
                         }
                     },
                     animation: {
-                        'fade-in': 'fadeIn 0.6s ease-out',
-                        'slide-up': 'slideUp 0.4s ease-out',
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
                         'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'glow': 'glow 2s infinite',
+                        'modal-in': 'modalIn 0.3s ease-out',
+                        'backdrop-in': 'backdropIn 0.3s ease-out'
                     },
                     backdropBlur: {
                         'xs': '2px',
+                    },
+                    keyframes: {
+                        modalIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.95) translateY(-10px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
+                        },
+                        backdropIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        }
                     }
                 }
             }
@@ -52,9 +64,6 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
-    
-    <!-- Alpine.js for interactivity -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white font-sans antialiased">
     <!-- Enhanced background effects -->
@@ -64,21 +73,21 @@
         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse-soft"></div>
     </div>
 
-    <!-- Enhanced Navigation -->
+    <!-- Enhanced Navigation with Jarvis Branding -->
     <nav class="relative z-10 bg-black/30 backdrop-blur-xl border-b border-white/10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center space-x-4">
                     <div class="flex-shrink-0">
                         <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                            <i class="fas fa-brain text-white text-lg"></i>
+                            <i class="fas fa-robot text-white text-lg"></i>
                         </div>
                     </div>
                     <div>
                         <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent tracking-tight">
-                            Smart Study Scheduler
+                            Jarvis AI Assistant
                         </h1>
-                        <p class="text-xs text-gray-400 font-medium tracking-wide">AI-Powered Personal Assistant</p>
+                        <p class="text-xs text-gray-400 font-medium tracking-wide">Just A Rather Very Intelligent System</p>
                     </div>
                 </div>
                 
@@ -105,17 +114,17 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Enhanced Toast Notifications -->
-    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-3"></div>
+    <!-- Enhanced Toast Notifications Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-[9999] space-y-3 max-w-sm"></div>
 
     <!-- Scripts -->
     <script src="{{ url_for('static', path='/js/app.js') }}"></script>
     
-    <!-- Enhanced page transitions -->
+    <!-- Performance optimized scripts -->
     <script>
-        // Add smooth page transitions
+        // Optimize page load performance
         document.addEventListener('DOMContentLoaded', function() {
-            // Animate elements on scroll
+            // Use requestAnimationFrame for smooth animations
             const observerOptions = {
                 threshold: 0.1,
                 rootMargin: '0px 0px -50px 0px'
@@ -124,28 +133,30 @@
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.style.animationDelay = '0s';
-                        entry.target.classList.add('animate-fade-in');
+                        requestAnimationFrame(() => {
+                            entry.target.style.animationDelay = '0s';
+                            entry.target.classList.add('animate-fade-in');
+                        });
+                        observer.unobserve(entry.target);
                     }
                 });
             }, observerOptions);
 
-            // Observe all cards and sections
-            document.querySelectorAll('.glass, .task-card, .stat-card').forEach(el => {
-                observer.observe(el);
-            });
+            // Observe elements with debouncing
+            const elementsToObserve = document.querySelectorAll('.glass, .task-card, .stat-card');
+            elementsToObserve.forEach(el => observer.observe(el));
 
-            // Add subtle hover sound effects (optional)
+            // Optimize hover effects with passive listeners
             document.querySelectorAll('button, .nav-link, .task-card').forEach(el => {
                 el.addEventListener('mouseenter', () => {
-                    // You can add subtle audio feedback here if desired
-                });
+                    // Optimized hover effects
+                }, { passive: true });
             });
         });
 
-        // Enhanced keyboard shortcuts
+        // Enhanced keyboard shortcuts with better performance
         document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + K to open task creation modal
+            // Ctrl/Cmd + K for task modal
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
                 const modal = document.getElementById('task-modal');
@@ -165,6 +176,97 @@
                 });
             }
         });
+
+        // Global modal functions with improved positioning
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                // Ensure modal is properly centered
+                modal.style.display = 'flex';
+                modal.style.alignItems = 'center';
+                modal.style.justifyContent = 'center';
+                modal.style.position = 'fixed';
+                modal.style.top = '0';
+                modal.style.left = '0';
+                modal.style.width = '100%';
+                modal.style.height = '100%';
+                modal.style.zIndex = '9999';
+                
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                
+                // Add animation classes
+                const modalContent = modal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.classList.add('animate-modal-in');
+                }
+                modal.classList.add('animate-backdrop-in');
+                
+                // Focus first input after animation
+                setTimeout(() => {
+                    const firstInput = modal.querySelector('input, textarea, select');
+                    if (firstInput) firstInput.focus();
+                }, 150);
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                
+                // Reset forms
+                const form = modal.querySelector('form');
+                if (form) form.reset();
+            }
+        }
+
+        // Enhanced toast notifications
+        function showToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            const colors = {
+                'success': 'bg-green-600 border-green-500',
+                'error': 'bg-red-600 border-red-500',
+                'warning': 'bg-yellow-600 border-yellow-500',
+                'info': 'bg-blue-600 border-blue-500'
+            };
+            
+            const icons = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-circle',
+                'warning': 'fas fa-exclamation-triangle',
+                'info': 'fas fa-info-circle'
+            };
+            
+            toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-2xl border flex items-center space-x-3 transform translate-x-full transition-all duration-300 backdrop-blur-lg`;
+            toast.innerHTML = `
+                <i class="${icons[type]}"></i>
+                <span class="font-medium flex-1">${message}</span>
+                <button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded">
+                    <i class="fas fa-times text-sm"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.style.transform = 'translateX(0)';
+            });
+            
+            // Auto remove with smooth animation
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.transform = 'translateX(100%)';
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
     </script>
 </body>
 </html>

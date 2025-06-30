@@ -5,12 +5,12 @@
 {% block content %}
 <div class="space-y-8">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Task Management</h1>
             <p class="text-gray-400 text-lg">Organize tasks with JARVIS intelligence</p>
         </div>
-        <button onclick="openTaskModal()" class="btn-primary">
+        <button data-action="open-task-modal" class="btn-primary">
             <i class="fas fa-plus mr-2"></i>Add New Task
         </button>
     </div>
@@ -19,7 +19,9 @@
     <div class="glass p-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label class="form-label">Search Tasks</label>
+                <label class="form-label">
+                    <i class="fas fa-search mr-2"></i>Search Tasks
+                </label>
                 <div class="relative">
                     <input 
                         type="text" 
@@ -34,32 +36,38 @@
             </div>
             
             <div>
-                <label class="form-label">Status</label>
+                <label class="form-label">
+                    <i class="fas fa-filter mr-2"></i>Status
+                </label>
                 <select id="status-filter" onchange="applyFilters()" class="form-select w-full">
                     <option value="">All Statuses</option>
-                    <option value="pending" {{ 'selected' if request.query_params.get('status') == 'pending' else '' }}>Pending</option>
-                    <option value="in_progress" {{ 'selected' if request.query_params.get('status') == 'in_progress' else '' }}>In Progress</option>
-                    <option value="completed" {{ 'selected' if request.query_params.get('status') == 'completed' else '' }}>Completed</option>
+                    <option value="pending" {% if request.query_params.get('status') == 'pending' %}selected{% endif %}>⏳ Pending</option>
+                    <option value="in_progress" {% if request.query_params.get('status') == 'in_progress' %}selected{% endif %}>⚡ In Progress</option>
+                    <option value="completed" {% if request.query_params.get('status') == 'completed' %}selected{% endif %}>✅ Completed</option>
                 </select>
             </div>
             
             <div>
-                <label class="form-label">Priority</label>
+                <label class="form-label">
+                    <i class="fas fa-flag mr-2"></i>Priority
+                </label>
                 <select id="priority-filter" onchange="applyFilters()" class="form-select w-full">
                     <option value="">All Priorities</option>
-                    <option value="low" {{ 'selected' if request.query_params.get('priority') == 'low' else '' }}>🟢 Low</option>
-                    <option value="medium" {{ 'selected' if request.query_params.get('priority') == 'medium' else '' }}>🟡 Medium</option>
-                    <option value="high" {{ 'selected' if request.query_params.get('priority') == 'high' else '' }}>🟠 High</option>
-                    <option value="urgent" {{ 'selected' if request.query_params.get('priority') == 'urgent' else '' }}>🔴 Urgent</option>
+                    <option value="low" {% if request.query_params.get('priority') == 'low' %}selected{% endif %}>🟢 Low</option>
+                    <option value="medium" {% if request.query_params.get('priority') == 'medium' %}selected{% endif %}>🟡 Medium</option>
+                    <option value="high" {% if request.query_params.get('priority') == 'high' %}selected{% endif %}>🟠 High</option>
+                    <option value="urgent" {% if request.query_params.get('priority') == 'urgent' %}selected{% endif %}>🔴 Urgent</option>
                 </select>
             </div>
             
             <div>
-                <label class="form-label">Category</label>
+                <label class="form-label">
+                    <i class="fas fa-tag mr-2"></i>Category
+                </label>
                 <select id="category-filter" onchange="applyFilters()" class="form-select w-full">
                     <option value="">All Categories</option>
                     {% for category in categories %}
-                    <option value="{{ category }}" {{ 'selected' if request.query_params.get('category') == category else '' }}>{{ category.title() }}</option>
+                    <option value="{{ category }}" {% if request.query_params.get('category') == category %}selected{% endif %}>{{ category.title() }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -67,66 +75,76 @@
     </div>
 
     <!-- Tasks Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6" id="tasks-container">
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6" id="tasks-container">
         {% for task in tasks %}
         <div class="task-card group relative overflow-hidden" data-task-id="{{ task.id }}">
             <!-- Task Header -->
             <div class="flex justify-between items-start mb-4">
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0 pr-3">
                     <h3 class="task-title text-white mb-1">{{ task.title }}</h3>
                     <p class="text-sm text-gray-500 font-mono">ID: {{ task.id }} • {{ task.created_at.strftime('%b %d, %Y') }}</p>
                 </div>
-                <span class="priority-{{ task.priority }}">{{ task.priority.upper() }}</span>
+                <div class="flex-shrink-0">
+                    <span class="priority-{{ task.priority.value }}">{{ task.priority.value|upper }}</span>
+                </div>
             </div>
 
             <!-- Description -->
             {% if task.description %}
             <p class="task-description text-gray-300 text-sm mb-4 line-clamp-3">{{ task.description }}</p>
+            {% else %}
+            <p class="task-description text-gray-500 text-sm mb-4 italic">No description provided</p>
             {% endif %}
 
             <!-- Meta Info -->
             <div class="space-y-2 mb-4">
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-400">Status:</span>
-                    <span class="status-{{ task.status }}">
-                        <i class="{{ get_status_icon(task.status) }} mr-1"></i>
-                        {{ task.status.replace('_', ' ').title() }}
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-400 flex items-center">
+                        <i class="{{ get_status_icon(task.status.value) }} mr-2 w-4"></i>Status:
+                    </span>
+                    <span class="status-{{ task.status.value }}">
+                        {{ task.status.value|replace('_', ' ')|title }}
                     </span>
                 </div>
                 
                 {% if task.category %}
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-400">Category:</span>
-                    <span class="text-blue-300">{{ task.category.title() }}</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-400 flex items-center">
+                        <i class="fas fa-folder mr-2 w-4"></i>Category:
+                    </span>
+                    <span class="text-blue-300 font-medium">{{ task.category|title }}</span>
                 </div>
                 {% endif %}
                 
                 {% if task.estimated_duration %}
-                <div class="flex justify-between text-sm">
-                    <span class="text-gray-400">Duration:</span>
-                    <span class="text-purple-300">{{ format_duration(task.estimated_duration) }}</span>
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-gray-400 flex items-center">
+                        <i class="fas fa-clock mr-2 w-4"></i>Duration:
+                    </span>
+                    <span class="text-purple-300 font-mono">{{ format_duration(task.estimated_duration) }}</span>
                 </div>
                 {% endif %}
             </div>
 
             <!-- Progress -->
             <div class="mb-4">
-                <div class="flex justify-between text-sm text-gray-400 mb-2">
-                    <span>Progress</span>
-                    <span>{{ task.progress_percentage }}%</span>
+                <div class="flex justify-between items-center text-sm text-gray-400 mb-2">
+                    <span class="font-medium">Progress</span>
+                    <span class="font-mono text-white">{{ task.progress_percentage }}%</span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ task.progress_percentage }}%"></div>
+                    <div class="progress-fill" data-progress="{{ task.progress_percentage }}"></div>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-between items-center pt-4 border-t border-white/10">
+            <div class="flex justify-between items-center pt-4 border-t border-white/10 mt-auto">
                 <div class="flex space-x-2">
-                    {% if task.status != 'completed' %}
+                    {% if task.status.value != 'completed' %}
                     <button 
-                        onclick="completeTask({{ task.id }})" 
-                        class="text-green-400 hover:text-green-300 p-2 hover:bg-green-400/10 rounded transition-all duration-200"
+                        data-action="complete" 
+                        data-task-id="{{ task.id }}"
+                        class="text-green-400 hover:text-green-300 p-2 hover:bg-green-400/10 rounded-lg transition-all duration-200"
                         title="Mark as complete"
                         id="complete-btn-{{ task.id }}"
                     >
@@ -135,8 +153,9 @@
                     {% endif %}
                     
                     <button 
-                        onclick="editTask({{ task.id }})" 
-                        class="text-blue-400 hover:text-blue-300 p-2 hover:bg-blue-400/10 rounded transition-all duration-200"
+                        data-action="edit"
+                        data-task-id="{{ task.id }}"
+                        class="text-blue-400 hover:text-blue-300 p-2 hover:bg-blue-400/10 rounded-lg transition-all duration-200"
                         title="Edit task"
                         id="edit-btn-{{ task.id }}"
                     >
@@ -144,15 +163,16 @@
                     </button>
                     
                     <button 
-                        onclick="deleteTask({{ task.id }})" 
-                        class="text-red-400 hover:text-red-300 p-2 hover:bg-red-400/10 rounded transition-all duration-200"
+                        data-action="delete"
+                        data-task-id="{{ task.id }}"
+                        class="text-red-400 hover:text-red-300 p-2 hover:bg-red-400/10 rounded-lg transition-all duration-200"
                         title="Delete task"
                         id="delete-btn-{{ task.id }}"
                     >
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
-                <span class="text-xs text-gray-500 font-mono">#{{ task.id }}</span>
+                <span class="text-xs text-gray-500 font-mono bg-gray-800/50 px-2 py-1 rounded">#{{ task.id }}</span>
             </div>
 
             <!-- Hover overlay -->
@@ -169,10 +189,23 @@
                 <i class="fas fa-robot text-3xl text-white"></i>
             </div>
             <h3 class="text-2xl font-semibold text-white mb-3">No tasks found</h3>
-            <p class="text-gray-400 mb-8 leading-relaxed">Let JARVIS help you get organized by creating your first task.</p>
-            <button onclick="openTaskModal()" class="btn-primary">
-                <i class="fas fa-plus mr-2"></i>Create Your First Task
-            </button>
+            <p class="text-gray-400 mb-8 leading-relaxed">
+                {% if request.query_params.get('search') or request.query_params.get('status') or request.query_params.get('priority') or request.query_params.get('category') %}
+                No tasks match your current filters. Try adjusting your search criteria.
+                {% else %}
+                Let JARVIS help you get organized by creating your first task.
+                {% endif %}
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                {% if request.query_params.get('search') or request.query_params.get('status') or request.query_params.get('priority') or request.query_params.get('category') %}
+                <button onclick="clearFilters()" class="btn-secondary">
+                    <i class="fas fa-times mr-2"></i>Clear Filters
+                </button>
+                {% endif %}
+                <button data-action="open-task-modal" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Create Task
+                </button>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -186,7 +219,7 @@
                 <h3 class="text-2xl font-bold text-white" id="modal-title">Create New Task</h3>
                 <p class="text-gray-400 text-sm">Add task to JARVIS system</p>
             </div>
-            <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded transition-colors">
+            <button onclick="closeTaskModal()" class="text-gray-400 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -195,7 +228,9 @@
             <input type="hidden" name="task_id" id="task-id">
             
             <div>
-                <label class="form-label">Task Title *</label>
+                <label class="form-label">
+                    <i class="fas fa-tasks mr-2"></i>Task Title *
+                </label>
                 <input 
                     type="text" 
                     name="title" 
@@ -203,33 +238,44 @@
                     required 
                     class="form-input w-full" 
                     placeholder="Enter a clear, actionable task title..."
+                    maxlength="200"
                 >
             </div>
             
             <div>
-                <label class="form-label">Description</label>
+                <label class="form-label">
+                    <i class="fas fa-align-left mr-2"></i>Description
+                </label>
                 <textarea 
                     name="description" 
                     id="task-description" 
                     rows="4" 
-                    class="form-input w-full" 
+                    class="form-input w-full resize-none" 
                     placeholder="Describe what needs to be accomplished..."
+                    maxlength="1000"
                 ></textarea>
+                <div class="text-xs text-gray-500 mt-1">
+                    <span id="description-counter">0</span>/1000 characters
+                </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label class="form-label">Priority</label>
+                    <label class="form-label">
+                        <i class="fas fa-flag mr-2"></i>Priority
+                    </label>
                     <select name="priority" id="task-priority" class="form-select w-full">
-                        <option value="low">�� Low</option>
-                        <option value="medium" selected>🟡 Medium</option>
-                        <option value="high">🟠 High</option>
-                        <option value="urgent">�� Urgent</option>
+                        <option value="low">🟢 Low Priority</option>
+                        <option value="medium" selected>🟡 Medium Priority</option>
+                        <option value="high">🟠 High Priority</option>
+                        <option value="urgent">🔴 Urgent Priority</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="form-label">Category</label>
+                    <label class="form-label">
+                        <i class="fas fa-tag mr-2"></i>Category
+                    </label>
                     <input 
                         type="text" 
                         name="category" 
@@ -237,6 +283,7 @@
                         class="form-input w-full" 
                         placeholder="work, study, personal..."
                         list="category-suggestions"
+                        maxlength="50"
                     >
                     <datalist id="category-suggestions">
                         {% for category in categories %}
@@ -248,11 +295,15 @@
                         <option value="health">
                         <option value="learning">
                         <option value="development">
+                        <option value="testing">
+                        <option value="documentation">
                     </datalist>
                 </div>
                 
                 <div>
-                    <label class="form-label">Duration (minutes)</label>
+                    <label class="form-label">
+                        <i class="fas fa-clock mr-2"></i>Duration (minutes)
+                    </label>
                     <input 
                         type="number" 
                         name="estimated_duration" 
@@ -261,7 +312,9 @@
                         placeholder="30" 
                         min="5" 
                         max="480"
+                        step="5"
                     >
+                    <div class="text-xs text-gray-500 mt-1">5 minutes to 8 hours</div>
                 </div>
             </div>
             
@@ -281,11 +334,13 @@
 <div id="delete-modal" class="modal-backdrop hidden">
     <div class="modal-content max-w-md">
         <div class="text-center">
-            <div class="w-16 h-16 bg-red-100/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div class="w-16 h-16 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
                 <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">Delete Task</h3>
-            <p class="text-gray-400 mb-8 leading-relaxed">Are you sure you want to delete this task? This action cannot be undone and all associated data will be permanently removed.</p>
+            <h3 class="text-xl font-bold text-white mb-3">Delete Task</h3>
+            <p class="text-gray-400 mb-8 leading-relaxed">
+                Are you sure you want to delete this task? This action cannot be undone and all associated data will be permanently removed.
+            </p>
             <div class="flex justify-center space-x-4">
                 <button onclick="closeDeleteModal()" class="btn-secondary">
                     <i class="fas fa-times mr-2"></i>Cancel
@@ -297,77 +352,291 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block styles %}
+<style>
+/* Enhanced Modal Styling */
+.modal-backdrop {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2rem !important;
+    overflow-y: auto !important;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-backdrop.hidden {
+    display: none !important;
+}
+
+.modal-content {
+    background: linear-gradient(145deg, rgba(17, 24, 39, 0.95), rgba(31, 41, 55, 0.95)) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 24px !important;
+    padding: 2.5rem !important;
+    max-width: 90vw !important;
+    max-height: 90vh !important;
+    width: 100% !important;
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    position: relative !important;
+    margin: auto !important;
+    animation: modalSlideIn 0.4s ease-out;
+    overflow-y: auto !important;
+    transform: translateZ(0);
+}
+
+.modal-content.max-w-md {
+    max-width: 32rem !important;
+}
+
+.modal-content.max-w-2xl {
+    max-width: 48rem !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.95) translateY(-20px);
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Enhanced Form Styling */
+.form-input, .form-select {
+    background: rgba(55, 65, 81, 0.8) !important;
+    border: 2px solid rgba(75, 85, 99, 0.5) !important;
+    border-radius: 12px !important;
+    padding: 0.875rem 1rem !important;
+    color: #ffffff !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(10px) !important;
+    width: 100% !important;
+}
+
+.form-input:focus, .form-select:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+    background-color: rgba(55, 65, 81, 0.9) !important;
+    transform: translateY(-1px);
+}
+
+.form-input::placeholder {
+    color: #9ca3af !important;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+}
+
+.form-label i {
+    margin-right: 0.5rem;
+    color: #60a5fa;
+    width: 1rem;
+}
+
+/* Enhanced Button Styling */
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: none !important;
+    color: white !important;
+    padding: 0.875rem 1.5rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3) !important;
+    transform: translateZ(0);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2563eb, #1e40af) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+}
+
+.btn-secondary {
+    background: rgba(75, 85, 99, 0.8) !important;
+    border: 2px solid rgba(107, 114, 128, 0.5) !important;
+    color: white !important;
+    padding: 0.875rem 1.5rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.btn-secondary:hover {
+    background: rgba(107, 114, 128, 0.8) !important;
+    border-color: rgba(156, 163, 175, 0.7) !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border: none !important;
+    color: white !important;
+    padding: 0.875rem 1.5rem !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Enhanced textarea styling */
+textarea.form-input {
+    resize: none !important;
+    min-height: 120px !important;
+    line-height: 1.6 !important;
+}
+
+/* Character counter styling */
+#description-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+
+/* Grid improvements */
+.grid.gap-6 {
+    gap: 1.5rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .modal-content {
+        margin: 1rem !important;
+        padding: 1.5rem !important;
+        border-radius: 16px !important;
+        max-height: calc(100vh - 2rem) !important;
+    }
+    
+    .btn-primary, .btn-secondary, .btn-danger {
+        padding: 0.75rem 1.25rem !important;
+        font-size: 0.9rem !important;
+    }
+    
+    .form-input, .form-select {
+        padding: 0.75rem !important;
+        font-size: 0.9rem !important;
+    }
+}
+</style>
+{% endblock %}
 <script>
-// Global variables
-let taskToDelete = null;
-let isEditing = false;
+var taskToDelete = null;
+var isEditing = false;
 
-// Utility functions
 function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
+    var timeout;
+    return function executedFunction() {
+        var args = Array.prototype.slice.call(arguments);
+        var later = function() {
             clearTimeout(timeout);
-            func(...args);
+            func.apply(null, args);
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
 }
 
-function showToast(message, type = 'info', duration = 3000) {
-    const container = document.getElementById('toast-container');
+function getToastColor(type) {
+    switch (type) {
+        case 'success': return 'bg-green-600';
+        case 'error': return 'bg-red-600';
+        case 'warning': return 'bg-yellow-600';
+        case 'info': return 'bg-blue-600';
+        default: return 'bg-blue-600';
+    }
+}
+
+function getToastIcon(type) {
+    switch (type) {
+        case 'success': return 'fas fa-check-circle';
+        case 'error': return 'fas fa-exclamation-circle';
+        case 'warning': return 'fas fa-exclamation-triangle';
+        case 'info': return 'fas fa-info-circle';
+        default: return 'fas fa-info-circle';
+    }
+}
+
+function showToast(message, type, duration) {
+    type = type || 'info';
+    duration = duration || 3000;
+    
+    var container = document.getElementById('toast-container');
     if (!container) return;
     
-    const toast = document.createElement('div');
-    const colors = {
-        'success': 'bg-green-600',
-        'error': 'bg-red-600',
-        'warning': 'bg-yellow-600',
-        'info': 'bg-blue-600'
-    };
+    var toast = document.createElement('div');
+    var colorClass = getToastColor(type);
+    var iconClass = getToastIcon(type);
     
-    const icons = {
-        'success': 'fas fa-check-circle',
-        'error': 'fas fa-exclamation-circle',
-        'warning': 'fas fa-exclamation-triangle',
-        'info': 'fas fa-info-circle'
-    };
-    
-    toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3 transform translate-x-full transition-transform duration-300`;
-    toast.innerHTML = `
-        <i class="${icons[type]}"></i>
-        <span class="font-medium">${message}</span>
-        <button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white transition-colors">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
+    toast.className = colorClass + ' text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3 transform translate-x-full transition-transform duration-300';
+    toast.innerHTML = '<i class="' + iconClass + '"></i><span class="font-medium">' + message + '</span><button onclick="this.parentElement.remove()" class="ml-2 text-white/80 hover:text-white transition-colors"><i class="fas fa-times"></i></button>';
     
     container.appendChild(toast);
     
-    // Animate in
-    setTimeout(() => {
+    setTimeout(function() {
         toast.style.transform = 'translateX(0)';
     }, 10);
     
-    // Auto remove
-    setTimeout(() => {
+    setTimeout(function() {
         if (toast.parentElement) {
             toast.style.transform = 'translateX(100%)';
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
         }
     }, duration);
 }
 
-// Filter functions
 function applyFilters() {
-    const status = document.getElementById('status-filter').value;
-    const priority = document.getElementById('priority-filter').value;
-    const category = document.getElementById('category-filter').value;
-    const search = document.getElementById('search-input').value;
+    var status = document.getElementById('status-filter').value;
+    var priority = document.getElementById('priority-filter').value;
+    var category = document.getElementById('category-filter').value;
+    var search = document.getElementById('search-input').value;
     
-    const params = new URLSearchParams();
+    var params = new URLSearchParams();
     if (status) params.set('status', status);
     if (priority) params.set('priority', priority);
     if (category) params.set('category', category);
@@ -376,69 +645,73 @@ function applyFilters() {
     window.location.search = params.toString();
 }
 
-const handleSearch = debounce(applyFilters, 500);
+var handleSearch = debounce(applyFilters, 500);
 
-// Task management functions
-async function completeTask(taskId) {
-    const button = document.getElementById(`complete-btn-${taskId}`);
+function clearFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('status-filter').value = '';
+    document.getElementById('priority-filter').value = '';
+    document.getElementById('category-filter').value = '';
+    window.location.href = window.location.pathname;
+}
+
+function completeTask(taskId) {
+    var button = document.getElementById('complete-btn-' + taskId);
     if (!button) return;
     
-    const originalHTML = button.innerHTML;
+    var originalHTML = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
     
-    try {
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        button.disabled = true;
-        
-        const response = await fetch(`/api/tasks/${taskId}/complete`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
+    var fetchOptions = {};
+    fetchOptions.method = 'PATCH';
+    fetchOptions.headers = {};
+    fetchOptions.headers['Content-Type'] = 'application/json';
+    
+    fetch('/api/tasks/' + taskId + '/complete', fetchOptions)
+    .then(function(response) {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('HTTP error! status: ' + response.status);
         }
-        
-        const result = await response.json();
+        return response.json();
+    })
+    .then(function() {
         showToast('Task completed successfully! 🎉', 'success');
         
-        // Update UI immediately
-        const taskCard = button.closest('.task-card');
+        var taskCard = button.closest('.task-card');
         if (taskCard) {
             taskCard.style.opacity = '0.7';
             taskCard.style.transform = 'scale(0.98)';
         }
         
-        setTimeout(() => {
+        setTimeout(function() {
             window.location.reload();
         }, 1500);
-        
-    } catch (error) {
+    })
+    .catch(function(error) {
         console.error('Error completing task:', error);
         showToast('Failed to complete task. Please try again.', 'error');
         button.innerHTML = originalHTML;
         button.disabled = false;
-    }
+    });
 }
 
-async function editTask(taskId) {
-    try {
-        showToast('Loading task details...', 'info', 2000);
-        
-        const response = await fetch(`/api/tasks/${taskId}`);
+function editTask(taskId) {
+    showToast('Loading task details...', 'info', 2000);
+    
+    fetch('/api/tasks/' + taskId)
+    .then(function(response) {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('HTTP error! status: ' + response.status);
         }
-        
-        const task = await response.json();
-        
-        // Set editing mode
+        return response.json();
+    })
+    .then(function(task) {
         isEditing = true;
         
-        // Update modal title and button
         document.getElementById('modal-title').textContent = 'Edit Task';
         document.getElementById('submit-btn').innerHTML = '<i class="fas fa-save mr-2"></i>Update Task';
         
-        // Populate form fields
         document.getElementById('task-id').value = task.id;
         document.getElementById('task-title').value = task.title;
         document.getElementById('task-description').value = task.description || '';
@@ -446,197 +719,219 @@ async function editTask(taskId) {
         document.getElementById('task-category').value = task.category || '';
         document.getElementById('task-duration').value = task.estimated_duration || '';
         
-        // Open modal
-        openTaskModal();
-        
-    } catch (error) {
+        openModal('task-modal');
+    })
+    .catch(function(error) {
         console.error('Error loading task:', error);
         showToast('Failed to load task details. Please try again.', 'error');
-    }
+    });
 }
 
 function deleteTask(taskId) {
     taskToDelete = taskId;
-    openDeleteModal();
+    openModal('delete-modal');
 }
 
-async function confirmDeleteTask() {
+function confirmDeleteTask() {
     if (!taskToDelete) return;
     
-    const deleteBtn = document.getElementById('confirm-delete-btn');
-    const originalHTML = deleteBtn.innerHTML;
+    var deleteBtn = document.getElementById('confirm-delete-btn');
+    var originalHTML = deleteBtn.innerHTML;
     
-    try {
-        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
-        deleteBtn.disabled = true;
-        
-        const response = await fetch(`/api/tasks/${taskToDelete}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        
+    deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Deleting...';
+    deleteBtn.disabled = true;
+    
+    var fetchOptions = {};
+    fetchOptions.method = 'DELETE';
+    fetchOptions.headers = {};
+    fetchOptions.headers['Content-Type'] = 'application/json';
+    
+    fetch('/api/tasks/' + taskToDelete, fetchOptions)
+    .then(function(response) {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('HTTP error! status: ' + response.status);
         }
-        
+        return response.json();
+    })
+    .then(function() {
         showToast('Task deleted successfully', 'success');
-        closeDeleteModal();
+        closeModal('delete-modal');
         
-        // Animate task removal
-        const taskCard = document.querySelector(`[data-task-id="${taskToDelete}"]`);
+        var taskCard = document.querySelector('[data-task-id="' + taskToDelete + '"]');
         if (taskCard) {
             taskCard.style.transform = 'scale(0) rotate(5deg)';
             taskCard.style.opacity = '0';
-            setTimeout(() => {
+            setTimeout(function() {
                 taskCard.remove();
             }, 300);
         }
         
-        setTimeout(() => {
+        setTimeout(function() {
             window.location.reload();
         }, 1000);
-        
-    } catch (error) {
+    })
+    .catch(function(error) {
         console.error('Error deleting task:', error);
         showToast('Failed to delete task. Please try again.', 'error');
         deleteBtn.innerHTML = originalHTML;
         deleteBtn.disabled = false;
-    }
+    });
 }
 
-// Form submission
-async function handleTaskSubmit(event) {
+function handleTaskSubmit(event) {
     event.preventDefault();
     
-    const form = event.target;
-    const formData = new FormData(form);
-    const submitBtn = document.getElementById('submit-btn');
-    const originalHTML = submitBtn.innerHTML;
+    var form = event.target;
+    var formData = new FormData(form);
+    var submitBtn = document.getElementById('submit-btn');
+    var originalHTML = submitBtn.innerHTML;
     
-    try {
-        submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>${isEditing ? 'Updating...' : 'Creating...'}`;
-        submitBtn.disabled = true;
-        
-        const taskData = {
-            title: formData.get('title'),
-            description: formData.get('description') || null,
-            priority: formData.get('priority'),
-            category: formData.get('category') || null,
-            estimated_duration: parseInt(formData.get('estimated_duration')) || null
-        };
-        
-        const taskId = formData.get('task_id');
-        const url = isEditing ? `/api/tasks/${taskId}` : '/api/tasks';
-        const method = isEditing ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(taskData)
-        });
-        
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + (isEditing ? 'Updating...' : 'Creating...');
+    submitBtn.disabled = true;
+    
+    var taskData = {};
+    taskData.title = formData.get('title');
+    taskData.description = formData.get('description') || null;
+    taskData.priority = formData.get('priority');
+    taskData.category = formData.get('category') || null;
+    taskData.estimated_duration = parseInt(formData.get('estimated_duration')) || null;
+    
+    var taskId = formData.get('task_id');
+    var url = isEditing ? '/api/tasks/' + taskId : '/api/tasks';
+    var method = isEditing ? 'PUT' : 'POST';
+    
+    var fetchOptions = {};
+    fetchOptions.method = method;
+    fetchOptions.headers = {};
+    fetchOptions.headers['Content-Type'] = 'application/json';
+    fetchOptions.body = JSON.stringify(taskData);
+    
+    fetch(url, fetchOptions)
+    .then(function(response) {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error('HTTP error! status: ' + response.status);
         }
-        
-        const result = await response.json();
+        return response.json();
+    })
+    .then(function() {
         showToast(isEditing ? 'Task updated successfully! ✨' : 'Task created successfully! 🎉', 'success');
         
-        closeTaskModal();
-        setTimeout(() => {
+        closeModal('task-modal');
+        setTimeout(function() {
             window.location.reload();
         }, 1500);
-        
-    } catch (error) {
+    })
+    .catch(function(error) {
         console.error('Error saving task:', error);
         showToast('Failed to save task. Please try again.', 'error');
         submitBtn.innerHTML = originalHTML;
         submitBtn.disabled = false;
-    }
+    });
 }
 
-// Modal functions
-function openTaskModal() {
-    const modal = document.getElementById('task-modal');
+function openModal(modalId) {
+    var modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         
-        // Focus first input
-        setTimeout(() => {
-            const titleInput = document.getElementById('task-title');
+        setTimeout(function() {
+            var titleInput = document.getElementById('task-title');
             if (titleInput) titleInput.focus();
         }, 100);
     }
 }
 
-function closeTaskModal() {
-    const modal = document.getElementById('task-modal');
+function closeModal(modalId) {
+    var modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
+}
+
+function closeTaskModal() {
+    closeModal('task-modal');
     
-    // Reset form
-    const form = document.getElementById('task-form');
+    var form = document.getElementById('task-form');
     if (form) form.reset();
     
-    // Reset modal state
     document.getElementById('task-id').value = '';
     document.getElementById('modal-title').textContent = 'Create New Task';
     document.getElementById('submit-btn').innerHTML = '<i class="fas fa-plus mr-2"></i>Create Task';
     isEditing = false;
 }
 
-function openDeleteModal() {
-    const modal = document.getElementById('delete-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
 function closeDeleteModal() {
-    const modal = document.getElementById('delete-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.style.overflow = 'auto';
-    }
+    closeModal('delete-modal');
     taskToDelete = null;
 }
 
-// Event listeners
+function initializeProgressBars() {
+    var progressElements = document.querySelectorAll('.progress-fill');
+    progressElements.forEach(function(element) {
+        var progress = element.getAttribute('data-progress');
+        if (progress) {
+            element.style.width = progress + '%';
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Animate task cards on load
-    const taskCards = document.querySelectorAll('.task-card');
-    taskCards.forEach((card, index) => {
+    var descriptionTextarea = document.getElementById('task-description');
+    var counter = document.getElementById('description-counter');
+    
+    if (descriptionTextarea && counter) {
+        descriptionTextarea.addEventListener('input', function() {
+            var length = this.value.length;
+            counter.textContent = length;
+            
+            if (length > 800) {
+                counter.className = 'text-red-400';
+            } else if (length > 600) {
+                counter.className = 'text-yellow-400';
+            } else {
+                counter.className = 'text-gray-500';
+            }
+        });
+    }
+    
+    var taskCards = document.querySelectorAll('.task-card');
+    taskCards.forEach(function(card, index) {
         card.style.opacity = '0';
         card.style.transform = 'translateY(20px)';
         
-        setTimeout(() => {
+        setTimeout(function() {
             card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
             card.style.opacity = '1';
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+    
+    initializeProgressBars();
 });
 
-// Keyboard shortcuts
 document.addEventListener('keydown', function(e) {
-    // Escape to close modals
     if (e.key === 'Escape') {
         closeTaskModal();
         closeDeleteModal();
     }
     
-    // Ctrl/Cmd + N to create new task
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
-        openTaskModal();
+        openModal('task-modal');
+    }
+    
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        var searchInput = document.getElementById('search-input');
+        if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+        }
     }
 });
 
-// Close modals when clicking backdrop
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-backdrop')) {
         if (e.target.id === 'task-modal') {
@@ -644,6 +939,37 @@ document.addEventListener('click', function(e) {
         } else if (e.target.id === 'delete-modal') {
             closeDeleteModal();
         }
+    }
+    
+    // Handle task action buttons
+    var button = e.target.closest('button[data-action]');
+    if (button) {
+        var action = button.getAttribute('data-action');
+        var taskId = button.getAttribute('data-task-id');
+        
+        if (action === 'complete') {
+            completeTask(taskId);
+        } else if (action === 'edit') {
+            editTask(taskId);
+        } else if (action === 'delete') {
+            deleteTask(taskId);
+        } else if (action === 'close-task-modal') {
+            closeTaskModal();
+        } else if (action === 'close-delete-modal') {
+            closeDeleteModal();
+        } else if (action === 'confirm-delete') {
+            confirmDeleteTask();
+        } else if (action === 'open-task-modal') {
+            openModal('task-modal');
+        }
+    }
+});
+
+// Handle form submission
+document.addEventListener('submit', function(e) {
+    if (e.target.id === 'task-form') {
+        e.preventDefault();
+        handleTaskSubmit(e);
     }
 });
 </script>
