@@ -59,7 +59,7 @@
             <i class="fas fa-bolt text-yellow-400 mr-3"></i>
             Quick Actions
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             <button onclick="openModal('task-modal')" class="action-btn rounded-2xl group">
                 <div class="flex items-center">
                     <div class="w-14 h-14 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
@@ -67,15 +67,15 @@
                     </div>
                     <div class="text-left flex-1">
                         <div class="action-title text-white mb-1">Add New Task</div>
-                        <div class="action-subtitle text-gray-400">Create a new task to track</div>
+                        <div class="action-subtitle text-gray-400">Create with scheduling</div>
                     </div>
                 </div>
             </button>
             
-            <button onclick="window.location.href='/schedule'" class="action-btn rounded-2xl group">
+            <button onclick="generateSchedule()" class="action-btn rounded-2xl group">
                 <div class="flex items-center">
                     <div class="w-14 h-14 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
-                        <i class="fas fa-calendar-plus text-white text-xl"></i>
+                        <i class="fas fa-magic text-white text-xl"></i>
                     </div>
                     <div class="text-left flex-1">
                         <div class="action-title text-white mb-1">Generate Schedule</div>
@@ -84,9 +84,21 @@
                 </div>
             </button>
             
-            <button onclick="window.location.href='/analytics'" class="action-btn rounded-2xl group">
+            <button onclick="window.location.href='/calendar'" class="action-btn rounded-2xl group">
                 <div class="flex items-center">
                     <div class="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
+                        <i class="fas fa-calendar-week text-white text-xl"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <div class="action-title text-white mb-1">View Calendar</div>
+                        <div class="action-subtitle text-gray-400">Weekly schedule view</div>
+                    </div>
+                </div>
+            </button>
+
+            <button onclick="window.location.href='/analytics'" class="action-btn rounded-2xl group">
+                <div class="flex items-center">
+                    <div class="w-14 h-14 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-300">
                         <i class="fas fa-chart-bar text-white text-xl"></i>
                     </div>
                     <div class="text-left flex-1">
@@ -116,9 +128,22 @@
             <div class="task-card group relative overflow-hidden">
                 <div class="flex justify-between items-start mb-4">
                     <h4 class="task-title text-white truncate flex-1">{{ task.title }}</h4>
-                    <span class="priority-{{ task.priority }}">{{ task.priority.upper() }}</span>
+                    <span class="priority-{{ task.priority.value }}">{{ task.priority.value.upper() }}</span>
                 </div>
                 <p class="task-description text-gray-400 mb-4 line-clamp-2">{{ task.description or 'No description' }}</p>
+                
+                <!-- NEW: Show scheduling info if available -->
+                {% if task.scheduled_start_time %}
+                <div class="mb-3 p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <div class="flex items-center text-sm text-blue-300">
+                        <i class="fas fa-clock mr-2"></i>
+                        <span>{{ task.scheduled_start_time.strftime('%m/%d %H:%M') }}</span>
+                        {% if task.estimated_duration %}
+                        <span class="ml-2 text-gray-400">({{ task.estimated_duration }}min)</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
                 
                 <!-- Progress bar -->
                 <div class="mb-4">
@@ -126,147 +151,448 @@
                         <span class="font-medium">Progress</span>
                         <span class="font-mono">{{ task.progress_percentage }}%</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: {{ task.progress_percentage }}%"></div>
+                    <div class="w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-700 ease-out" 
+                             style="width: {{ task.progress_percentage }}%"></div>
                     </div>
                 </div>
                 
-                <div class="flex justify-between items-center pt-4 border-t border-white/10">
-                    <span class="status-{{ task.status }}">{{ task.status.replace('_', ' ').title() }}</span>
-                    <div class="flex space-x-3">
-                        {% if task.status != 'completed' %}
-                        <button onclick="completeTaskFromDashboard({{ task.id }})" class="text-green-400 hover:text-green-300 transition-colors p-1 hover:bg-green-400/10 rounded">
-                            <i class="fas fa-check"></i>
+                <!-- Task metadata -->
+                <div class="flex items-center justify-between text-xs text-gray-400 mb-3">
+                    <div class="flex items-center space-x-3">
+                        <span class="status-{{ task.status.value }}">
+                            <i class="{{ get_status_icon(task.status.value) }} mr-1"></i>
+                            {{ task.status.value.replace('_', ' ').title() }}
+                        </span>
+                        {% if task.category %}
+                        <span class="bg-gray-700/50 px-2 py-1 rounded-full">{{ task.category }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="font-mono">{{ format_duration(task.estimated_duration) }}</span>
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex items-center justify-between">
+                    <div class="flex space-x-2">
+                        {% if task.status.value == 'scheduled' %}
+                        <button onclick="startTask({{ task.id }})" class="text-green-400 hover:text-green-300 p-1.5 hover:bg-green-400/10 rounded-lg transition-all duration-200" title="Start task">
+                            <i class="fas fa-play text-sm"></i>
+                        </button>
+                        {% elif task.status.value == 'pending' %}
+                        <button onclick="scheduleTask({{ task.id }})" class="text-blue-400 hover:text-blue-300 p-1.5 hover:bg-blue-400/10 rounded-lg transition-all duration-200" title="Schedule task">
+                            <i class="fas fa-calendar-plus text-sm"></i>
                         </button>
                         {% endif %}
-                        <button onclick="window.location.href='/tasks'" class="text-blue-400 hover:text-blue-300 transition-colors p-1 hover:bg-blue-400/10 rounded">
-                            <i class="fas fa-eye"></i>
+                        
+                        {% if task.status.value != 'completed' %}
+                        <button onclick="completeTask({{ task.id }})" class="text-green-400 hover:text-green-300 p-1.5 hover:bg-green-400/10 rounded-lg transition-all duration-200" title="Mark complete">
+                            <i class="fas fa-check text-sm"></i>
+                        </button>
+                        {% endif %}
+                        
+                        <button onclick="editTask({{ task.id }})" class="text-blue-400 hover:text-blue-300 p-1.5 hover:bg-blue-400/10 rounded-lg transition-all duration-200" title="Edit task">
+                            <i class="fas fa-edit text-sm"></i>
                         </button>
                     </div>
+                    <span class="text-xs text-gray-500 font-mono bg-gray-800/50 px-2 py-1 rounded">#{{ task.id }}</span>
                 </div>
+
+                <!-- Hover overlay -->
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             </div>
             {% endfor %}
         </div>
+
+        {% if not recent_tasks %}
+        <div class="text-center py-16">
+            <div class="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-robot text-3xl text-white"></i>
+            </div>
+            <h3 class="text-2xl font-semibold text-white mb-3">No tasks yet</h3>
+            <p class="text-gray-400 mb-8 leading-relaxed">
+                Let JARVIS help you get organized by creating your first task.
+            </p>
+            <button onclick="openModal('task-modal')" class="btn-primary bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <i class="fas fa-plus mr-2"></i>Create Your First Task
+            </button>
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Task Creation Modal -->
-<div id="task-modal" class="modal-backdrop hidden">
-    <div class="modal-content max-w-2xl">
-        <div class="flex justify-between items-center mb-8">
-            <div>
-                <h3 class="text-2xl font-bold text-white">Create New Task</h3>
-                <p class="text-gray-400 text-sm">Add a new task to JARVIS</p>
-            </div>
-            <button onclick="closeModal('task-modal')" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg">
-                <i class="fas fa-times text-xl"></i>
+<!-- Enhanced Task Modal (keeping your original styling) -->
+<div id="task-modal" class="modal-backdrop">
+    <div class="modal-content animate-modal-in">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class="fas fa-plus mr-2"></i>Create New Task
+            </h3>
+            <button onclick="closeModal('task-modal')" class="modal-close">
+                <i class="fas fa-times"></i>
             </button>
         </div>
         
-        <form onsubmit="handleTaskSubmit(event)" class="space-y-6">
+        <form id="task-form" class="modal-body space-y-6">
+            <!-- Task Title -->
             <div>
-                <label class="form-label">Task Title *</label>
-                <input type="text" name="title" required class="form-input w-full" placeholder="Enter task title...">
+                <label class="form-label">
+                    <i class="fas fa-heading mr-2"></i>Task Title *
+                </label>
+                <input 
+                    type="text" 
+                    name="title" 
+                    id="task-title" 
+                    required 
+                    class="form-input w-full" 
+                    placeholder="Enter a clear, actionable task title..."
+                    maxlength="200"
+                >
             </div>
             
+            <!-- Description -->
             <div>
-                <label class="form-label">Description</label>
-                <textarea name="description" rows="4" class="form-input w-full" placeholder="Describe your task..."></textarea>
+                <label class="form-label">
+                    <i class="fas fa-align-left mr-2"></i>Description
+                </label>
+                <textarea 
+                    name="description" 
+                    id="task-description" 
+                    rows="4" 
+                    class="form-input w-full resize-none" 
+                    placeholder="Describe what needs to be accomplished..."
+                    maxlength="1000"
+                ></textarea>
+                <div class="text-xs text-gray-500 mt-1">
+                    <span id="description-counter">0</span>/1000 characters
+                </div>
             </div>
             
+            <!-- Priority, Category, Duration -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <label class="form-label">Priority</label>
-                    <select name="priority" class="form-select w-full">
-                        <option value="low">🟢 Low</option>
-                        <option value="medium" selected>🟡 Medium</option>
-                        <option value="high">🟠 High</option>
+                    <label class="form-label">
+                        <i class="fas fa-flag mr-2"></i>Priority
+                    </label>
+                    <select name="priority" id="task-priority" class="form-select w-full">
+                        <option value="low">🟢 Low Priority</option>
+                        <option value="medium" selected>🟡 Medium Priority</option>
+                        <option value="high">🟠 High Priority</option>
                         <option value="urgent">🔴 Urgent</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="form-label">Duration (minutes)</label>
-                    <input type="number" name="estimated_duration" class="form-input w-full" placeholder="30" min="5" max="480">
+                    <label class="form-label">
+                        <i class="fas fa-tag mr-2"></i>Category
+                    </label>
+                    <input 
+                        type="text" 
+                        name="category" 
+                        id="task-category" 
+                        class="form-input w-full" 
+                        placeholder="Work, Study, Personal..."
+                    >
                 </div>
                 
                 <div>
-                    <label class="form-label">Category</label>
-                    <input type="text" name="category" class="form-input w-full" placeholder="work, study, personal...">
+                    <label class="form-label">
+                        <i class="fas fa-clock mr-2"></i>Duration (minutes)
+                    </label>
+                    <input 
+                        type="number" 
+                        name="duration" 
+                        id="task-duration" 
+                        class="form-input w-full" 
+                        placeholder="60"
+                        min="5"
+                        max="480"
+                        value="60"
+                    >
                 </div>
             </div>
-            
-            <div class="flex justify-end space-x-4 pt-6 border-t border-white/10">
-                <button type="button" onclick="closeModal('task-modal')" class="btn-secondary">Cancel</button>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-plus mr-2"></i>Create Task
-                </button>
+
+            <!-- NEW: Time Scheduling Section -->
+            <div class="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
+                <div class="flex items-center mb-4">
+                    <input type="checkbox" id="schedule-task" class="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 mr-3">
+                    <label for="schedule-task" class="form-label mb-0">
+                        <i class="fas fa-calendar-plus mr-2"></i>Schedule this task
+                    </label>
+                </div>
+                
+                <div id="scheduling-fields" class="space-y-4" style="display: none;">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">Start Date & Time</label>
+                            <input type="datetime-local" id="task-start-time" class="form-input w-full">
+                        </div>
+                        <div>
+                            <label class="form-label">End Time (Auto-calculated)</label>
+                            <input type="datetime-local" id="task-end-time" class="form-input w-full" readonly>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt mr-2"></i>Due Date (Optional)
+                        </label>
+                        <input type="datetime-local" id="task-due-date" class="form-input w-full">
+                    </div>
+                </div>
+            </div>
+
+            <!-- NEW: Energy & Focus Levels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="form-label">
+                        <i class="fas fa-battery-three-quarters mr-2"></i>Energy Level Required
+                    </label>
+                    <select id="task-energy-level" class="form-select w-full">
+                        <option value="1">1 - Very Low</option>
+                        <option value="2">2 - Low</option>
+                        <option value="3" selected>3 - Medium</option>
+                        <option value="4">4 - High</option>
+                        <option value="5">5 - Very High</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="form-label">
+                        <i class="fas fa-brain mr-2"></i>Focus Level Required
+                    </label>
+                    <select id="task-focus-level" class="form-select w-full">
+                        <option value="1">1 - Minimal</option>
+                        <option value="2">2 - Light</option>
+                        <option value="3" selected>3 - Moderate</option>
+                        <option value="4">4 - High</option>
+                        <option value="5">5 - Deep Focus</option>
+                    </select>
+                </div>
             </div>
         </form>
+
+        <div class="modal-footer">
+            <button type="button" onclick="closeModal('task-modal')" class="btn-secondary bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300">
+                <i class="fas fa-times mr-2"></i>Cancel
+            </button>
+            <button type="button" onclick="createTask()" class="btn-primary bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105">
+                <i class="fas fa-plus mr-2"></i>Create Task
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
-// Dashboard-specific functions
-function completeTaskFromDashboard(taskId) {
-    fetch(`/api/tasks/${taskId}/complete`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' }
-    })
-    .then(response => response.json())
-    .then(() => {
-        showToast('Task completed! 🎉', 'success');
-        setTimeout(() => location.reload(), 1000);
-    })
-    .catch(() => showToast('Failed to complete task', 'error'));
-}
+// JavaScript for enhanced functionality (keeping your original patterns)
 
-function handleTaskSubmit(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const taskData = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        priority: formData.get('priority'),
-        category: formData.get('category'),
-        estimated_duration: parseInt(formData.get('estimated_duration')) || null
-    };
+// Auto-calculate end time when start time or duration changes
+function updateEndTime() {
+    const startTime = document.getElementById('task-start-time').value;
+    const duration = parseInt(document.getElementById('task-duration').value) || 60;
     
-    fetch('/api/tasks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(taskData)
-    })
-    .then(response => response.json())
-    .then(() => {
-        showToast('Task created! 🎉', 'success');
-        closeModal('task-modal');
-        setTimeout(() => location.reload(), 1000);
-    })
-    .catch(() => showToast('Failed to create task', 'error'));
+    if (startTime) {
+        const start = new Date(startTime);
+        const end = new Date(start.getTime() + duration * 60000);
+        document.getElementById('task-end-time').value = end.toISOString().slice(0, 16);
+    }
 }
 
-function openModal(modalId) {
-    document.getElementById(modalId).classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
+// Toggle scheduling fields
+document.getElementById('schedule-task').addEventListener('change', function() {
+    const fields = document.getElementById('scheduling-fields');
+    fields.style.display = this.checked ? 'block' : 'none';
+    
+    if (this.checked && !document.getElementById('task-start-time').value) {
+        // Set default time to next hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1, 0, 0, 0);
+        document.getElementById('task-start-time').value = now.toISOString().slice(0, 16);
+        updateEndTime();
+    }
+});
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-    document.body.style.overflow = 'auto';
-}
+// Event listeners for auto-calculation
+document.getElementById('task-start-time').addEventListener('change', updateEndTime);
+document.getElementById('task-duration').addEventListener('change', updateEndTime);
 
-function showToast(message, type) {
-    const toast = document.createElement('div');
-    const colors = {
-        'success': 'bg-green-600',
-        'error': 'bg-red-600',
-        'info': 'bg-blue-600'
+// Character counter for description
+document.getElementById('task-description').addEventListener('input', function() {
+    document.getElementById('description-counter').textContent = this.value.length;
+});
+
+// Enhanced createTask function with scheduling
+async function createTask() {
+    const formData = {
+        title: document.getElementById('task-title').value.trim(),
+        description: document.getElementById('task-description').value.trim(),
+        priority: document.getElementById('task-priority').value,
+        category: document.getElementById('task-category').value.trim(),
+        estimated_duration: parseInt(document.getElementById('task-duration').value) || 60,
+        energy_level_required: parseInt(document.getElementById('task-energy-level').value),
+        focus_level_required: parseInt(document.getElementById('task-focus-level').value)
     };
-    toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3`;
-    toast.innerHTML = `<span>${message}</span>`;
-    document.getElementById('toast-container').appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+
+    // Validation
+    if (!formData.title) {
+        showNotification('Please enter a task title', 'error');
+        return;
+    }
+
+    // Add scheduling fields if enabled
+    if (document.getElementById('schedule-task').checked) {
+        formData.scheduled_start_time = document.getElementById('task-start-time').value || null;
+        formData.scheduled_end_time = document.getElementById('task-end-time').value || null;
+        formData.due_date = document.getElementById('task-due-date').value || null;
+    }
+
+    try {
+        const response = await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+            showNotification('Task created successfully!', 'success');
+            closeModal('task-modal');
+            // Reload the page to show the new task
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Failed to create task', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating task:', error);
+        showNotification('Failed to create task', 'error');
+    }
 }
+
+// Quick action functions
+async function generateSchedule() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+        showNotification('Generating AI schedule...', 'info');
+        
+        const response = await fetch('/api/schedule/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ target_date: today })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Schedule generated successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification(data.message || 'Failed to generate schedule', 'warning');
+        }
+    } catch (error) {
+        console.error('Error generating schedule:', error);
+        showNotification('Failed to generate schedule', 'error');
+    }
+}
+
+async function startTask(taskId) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}/start`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showNotification('Task started!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Failed to start task', 'error');
+        }
+    } catch (error) {
+        console.error('Error starting task:', error);
+        showNotification('Failed to start task', 'error');
+    }
+}
+
+async function completeTask(taskId) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}/complete`, {
+            method: 'PATCH'
+        });
+        
+        if (response.ok) {
+            showNotification('Task completed!', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Failed to complete task', 'error');
+        }
+    } catch (error) {
+        console.error('Error completing task:', error);
+        showNotification('Failed to complete task', 'error');
+    }
+}
+
+function scheduleTask(taskId) {
+    // For now, redirect to tasks page or open edit modal
+    // You can enhance this to open a quick scheduling modal
+    window.location.href = `/tasks?edit=${taskId}`;
+}
+
+function editTask(taskId) {
+    window.location.href = `/tasks?edit=${taskId}`;
+}
+
+// Notification system (keeping your original style)
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-6 right-6 p-4 rounded-xl text-white font-medium z-50 transform translate-x-full transition-transform duration-300 ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 
+        type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : type === 'warning' ? 'exclamation' : 'info'} mr-2"></i>
+            ${message}
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+    
+    // Hide notification
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// Keyboard shortcuts (keeping your original patterns)
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal('task-modal');
+    }
+    if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        openModal('task-modal');
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default start time when modal opens
+    const modal = document.getElementById('task-modal');
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.target.classList.contains('active') && !document.getElementById('task-start-time').value) {
+                const now = new Date();
+                now.setHours(now.getHours() + 1, 0, 0, 0);
+                document.getElementById('task-start-time').value = now.toISOString().slice(0, 16);
+                updateEndTime();
+            }
+        });
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+});
 </script>
 {% endblock %}

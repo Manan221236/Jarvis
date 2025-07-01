@@ -1,4 +1,4 @@
-# smart_scheduler/services/task_service.py
+# smart_scheduler/services/task_service.py - ENHANCED VERSION
 from sqlalchemy.orm import Session
 from smart_scheduler.models.task import Task, TaskStatus, TaskPriority
 from typing import List, Optional
@@ -18,7 +18,13 @@ class TaskService:
         category: Optional[str] = None,
         estimated_duration: Optional[int] = None,
         due_date: Optional[datetime] = None,
-        tags: Optional[str] = None
+        tags: Optional[str] = None,
+        # NEW ENHANCED PARAMETERS (with defaults for backward compatibility)
+        scheduled_start_time: Optional[datetime] = None,
+        scheduled_end_time: Optional[datetime] = None,
+        project_id: Optional[int] = None,
+        energy_level_required: int = 3,
+        focus_level_required: int = 3
     ) -> Task:
         """Create a new task"""
         
@@ -29,7 +35,13 @@ class TaskService:
             category=category,
             estimated_duration=estimated_duration,
             due_date=due_date,
-            tags=tags
+            tags=tags,
+            # NEW ENHANCED FIELDS
+            scheduled_start_time=scheduled_start_time,
+            scheduled_end_time=scheduled_end_time,
+            project_id=project_id,
+            energy_level_required=energy_level_required,
+            focus_level_required=focus_level_required
         )
         
         self.db.add(task)
@@ -43,7 +55,7 @@ class TaskService:
         status: Optional[TaskStatus] = None,
         category: Optional[str] = None,
         priority: Optional[TaskPriority] = None,
-        scheduled_date: Optional[datetime] = None,  # ADD THIS TO FIX ERROR
+        project_id: Optional[int] = None,  # NEW
         limit: int = 100
     ) -> List[Task]:
         """Get tasks with optional filtering"""
@@ -58,11 +70,9 @@ class TaskService:
         
         if priority:
             query = query.filter(Task.priority == priority)
-        
-        # Handle scheduled_date filter if provided
-        if scheduled_date:
-            # For now, we'll filter by due_date since we don't have scheduled_date column
-            query = query.filter(Task.due_date >= scheduled_date.date() if hasattr(scheduled_date, 'date') else scheduled_date)
+            
+        if project_id:  # NEW
+            query = query.filter(Task.project_id == project_id)
         
         return query.order_by(Task.created_at.desc()).limit(limit).all()
     
@@ -70,13 +80,8 @@ class TaskService:
         """Get a specific task by ID"""
         return self.db.query(Task).filter(Task.id == task_id).first()
     
-    def update_task_status(
-        self,
-        task_id: int,
-        status: TaskStatus
-    ) -> Optional[Task]:
+    def update_task_status(self, task_id: int, status: TaskStatus) -> Optional[Task]:
         """Update task status"""
-        
         task = self.get_task_by_id(task_id)
         if not task:
             return None
@@ -84,6 +89,7 @@ class TaskService:
         task.status = status
         task.updated_at = datetime.utcnow()
         
+        # NEW: If completing task, set completed_at
         if status == TaskStatus.COMPLETED:
             task.completed_at = datetime.utcnow()
             task.progress_percentage = 100.0
@@ -92,7 +98,37 @@ class TaskService:
         self.db.refresh(task)
         
         return task
-
+    
+    def delete_task(self, task_id: int) -> bool:
+        """Delete a task"""
+        task = self.get_task_by_id(task_id)
+        if not task:
+            return False
+        
+        self.db.delete(task)
+        self.db.commit()
+        return True
+    
+    def get_task_stats(self) -> dict:
+        """Get task statistics"""
+        total = self.db.query(Task).count()
+        completed = self.db.query(Task).filter(Task.status == TaskStatus.COMPLETED).count()
+        in_progress = self.db.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).count()
+        pending = self.db.query(Task).filter(Task.status == TaskStatus.PENDING).count()
+        scheduled = self.db.query(Task).filter(Task.status == TaskStatus.SCHEDULED).count()  # NEW
+        
+        completion_rate = round((completed / total * 100) if total > 0 else 0, 1)
+        
+        return {
+            "total": total,
+            "completed": completed,
+            "in_progress": in_progress,
+            "pending": pending,
+            "scheduled": scheduled,  # NEW
+            "completion_rate": completion_rate
+        }
+    
+    # NEW ENHANCED METHODS
     def update_task(
         self,
         task_id: int,
@@ -102,7 +138,10 @@ class TaskService:
         category: Optional[str] = None,
         estimated_duration: Optional[int] = None,
         due_date: Optional[datetime] = None,
-        tags: Optional[str] = None
+        tags: Optional[str] = None,
+        scheduled_start_time: Optional[datetime] = None,
+        scheduled_end_time: Optional[datetime] = None,
+        project_id: Optional[int] = None
     ) -> Optional[Task]:
         """Update an existing task"""
         
@@ -125,6 +164,12 @@ class TaskService:
             task.due_date = due_date
         if tags is not None:
             task.tags = tags
+        if scheduled_start_time is not None:
+            task.scheduled_start_time = scheduled_start_time
+        if scheduled_end_time is not None:
+            task.scheduled_end_time = scheduled_end_time
+        if project_id is not None:
+            task.project_id = project_id
         
         task.updated_at = datetime.utcnow()
         
@@ -133,46 +178,20 @@ class TaskService:
         
         return task
     
-    def delete_task(self, task_id: int) -> bool:
-        """Delete a task"""
+    def get_scheduled_tasks_for_date(self, target_date: datetime.date) -> List[Task]:
+        """Get all scheduled tasks for a specific date"""
+        from datetime import time
         
-        task = self.get_task_by_id(task_id)
-        if not task:
-            return False
+        start_of_day = datetime.combine(target_date, time.min)
+        end_of_day = datetime.combine(target_date, time.max)
         
-        self.db.delete(task)
-        self.db.commit()
-        
-        return True
-    
-    def get_task_stats(self) -> dict:
-        """Get task statistics - FIXED TO PREVENT ERROR"""
-        
-        try:
-            total_tasks = self.db.query(Task).count()
-            completed_tasks = self.db.query(Task).filter(Task.status == TaskStatus.COMPLETED).count()
-            in_progress_tasks = self.db.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).count()
-            pending_tasks = self.db.query(Task).filter(Task.status == TaskStatus.PENDING).count()
-            cancelled_tasks = self.db.query(Task).filter(Task.status == TaskStatus.CANCELLED).count()
-            
-            completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
-            
-            return {
-                "total": total_tasks,
-                "completed": completed_tasks,
-                "in_progress": in_progress_tasks,
-                "pending": pending_tasks,
-                "cancelled": cancelled_tasks,
-                "completion_rate": round(completion_rate, 1)
-            }
-        except Exception as e:
-            print(f"Error getting task stats: {e}")
-            # Return safe default values
-            return {
-                "total": 0,
-                "completed": 0,
-                "in_progress": 0,
-                "pending": 0,
-                "cancelled": 0,
-                "completion_rate": 0.0
-            }
+        return (
+            self.db.query(Task)
+            .filter(
+                Task.scheduled_start_time >= start_of_day,
+                Task.scheduled_start_time <= end_of_day,
+                Task.status == TaskStatus.SCHEDULED
+            )
+            .order_by(Task.scheduled_start_time.asc())
+            .all()
+        )
