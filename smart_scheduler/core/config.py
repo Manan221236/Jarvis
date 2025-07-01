@@ -25,4 +25,5 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
+# Fix: Remove the .env suffix that was causing the error
 settings = Settings()

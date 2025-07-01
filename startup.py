@@ -1,97 +1,97 @@
 #!/usr/bin/env python3
 """
-Startup script for Jarvis AI Assistant
-This script safely starts the application with proper error handling
+Smart Scheduler - Startup Script
+===============================
+
+This script provides environment checking and easy startup options for the Smart Scheduler application.
 """
 
 import os
 import sys
-import subprocess
 import logging
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - **%(name)s** - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("main")
 
-def check_environment():
-    """Check if we're in the right environment"""
+def check_virtual_environment():
+    """Check if we're running in a virtual environment"""
+    if not (hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)):
+        logger.warning("⚠️ Not in virtual environment - recommend using 'poetry shell' first")
+        return False
+    return True
+
+def check_main_module():
+    """Check if the main module exists"""
+    main_paths = [
+        "smart_scheduler/main.py",  # Correct location
+        "main.py"                   # Alternative location
+    ]
+    
+    for path in main_paths:
+        if Path(path).exists():
+            logger.info(f"✅ Found main module at: {path}")
+            return path
+    
+    logger.error("❌ main.py not found. Expected locations:")
+    for path in main_paths:
+        logger.error(f"   - {path}")
+    return None
+
+def check_dependencies():
+    """Check if required dependencies are installed"""
     try:
-        # Check if we're in virtual environment
-        if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
-            logger.info("✅ Virtual environment detected")
-        else:
-            logger.warning("⚠️ Not in virtual environment - recommend using 'poetry shell' first")
-        
-        # Check if main.py exists
-        if not os.path.exists('main.py'):
-            logger.error("❌ main.py not found in current directory")
-            return False
-            
+        import fastapi
+        import uvicorn
+        import smart_scheduler
+        logger.info("✅ Core dependencies available")
         return True
-    except Exception as e:
-        logger.error(f"❌ Environment check failed: {e}")
+    except ImportError as e:
+        logger.error(f"❌ Missing dependency: {e}")
+        logger.error("   Run 'poetry install' to install dependencies")
         return False
 
-def clean_database():
-    """Clean up any corrupted database state"""
+def run_development_server():
+    """Start the development server"""
     try:
-        db_file = "smart_scheduler.db"
-        if os.path.exists(db_file):
-            logger.info(f"📁 Database file found: {db_file}")
-        else:
-            logger.info("📁 No existing database - will create fresh")
-        return True
-    except Exception as e:
-        logger.warning(f"⚠️ Database cleanup warning: {e}")
-        return True  # Continue anyway
-
-def start_application():
-    """Start the FastAPI application"""
-    try:
-        logger.info("🚀 Starting Jarvis AI Assistant...")
-        
-        # Start with uvicorn
-        cmd = [
-            sys.executable, "-m", "uvicorn", 
-            "main:app", 
-            "--host", "127.0.0.1", 
-            "--port", "8000", 
-            "--reload",
-            "--log-level", "info"
-        ]
-        
-        logger.info(f"📄 Running command: {' '.join(cmd)}")
-        subprocess.run(cmd, check=True)
-        
-    except KeyboardInterrupt:
-        logger.info("👋 Application stopped by user")
-    except subprocess.CalledProcessError as e:
-        logger.error(f"❌ Application failed to start: {e}")
+        # Import and run the server
+        from smart_scheduler.main import run_server
+        logger.info("🚀 Starting development server...")
+        run_server()
+    except ImportError as e:
+        logger.error(f"❌ Failed to import server: {e}")
+        logger.error("   Try running: poetry run scheduler-server")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"❌ Unexpected error: {e}")
+        logger.error(f"❌ Server startup failed: {e}")
         sys.exit(1)
 
 def main():
     """Main startup function"""
     logger.info("🤖 Jarvis AI Assistant - Startup Script")
-    logger.info("=" * 50)
+    logger.info("==================================================")
     
-    # Check environment
-    if not check_environment():
+    # Environment checks
+    check_virtual_environment()
+    
+    main_module = check_main_module()
+    if not main_module:
         logger.error("❌ Environment check failed - exiting")
         sys.exit(1)
     
-    # Clean database state
-    if not clean_database():
-        logger.error("❌ Database cleanup failed - exiting")
+    if not check_dependencies():
+        logger.error("❌ Dependency check failed - exiting")
         sys.exit(1)
     
-    # Start application
-    start_application()
+    # If we get here, try to start the server
+    logger.info("✅ Environment checks passed")
+    logger.info("🚀 Starting server...")
+    
+    run_development_server()
 
 if __name__ == "__main__":
     main()
