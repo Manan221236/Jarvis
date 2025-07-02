@@ -41,6 +41,9 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+    
     <!-- Custom styles -->
     <style>
         @keyframes fadeIn {
@@ -176,58 +179,64 @@
         </div>
     </footer>
 
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-[9999] space-y-3 max-w-sm"></div>
+
     <!-- Global Scripts -->
     <script>
         // Global utilities
         window.jarvisUtils = {
             // Show toast notification
-            showToast: function(message, type = 'info', duration = 3000) {
-                const toastContainer = document.getElementById('toast-container') || this.createToastContainer();
-                
+            showToast: function(message, type = 'info', duration = 4000) {
+                const container = this.getToastContainer();
                 const toast = document.createElement('div');
+                
                 const colors = {
                     success: 'bg-green-600 border-green-500',
                     error: 'bg-red-600 border-red-500',
-                    info: 'bg-blue-600 border-blue-500',
-                    warning: 'bg-yellow-600 border-yellow-500'
+                    warning: 'bg-yellow-600 border-yellow-500',
+                    info: 'bg-blue-600 border-blue-500'
                 };
                 
                 const icons = {
-                    success: 'fa-check-circle',
-                    error: 'fa-exclamation-circle',
-                    info: 'fa-info-circle',
-                    warning: 'fa-exclamation-triangle'
+                    success: 'fas fa-check-circle',
+                    error: 'fas fa-exclamation-circle',
+                    warning: 'fas fa-exclamation-triangle',
+                    info: 'fas fa-info-circle'
                 };
                 
-                toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg flex items-center space-x-3 border-l-4 transform translate-x-full transition-all duration-300 opacity-0`;
+                toast.className = `${colors[type]} text-white px-6 py-4 rounded-xl shadow-lg border backdrop-blur-xl flex items-center space-x-3 transform translate-x-full transition-all duration-300 animate-slide-in`;
                 toast.innerHTML = `
-                    <i class="fas ${icons[type]} text-lg"></i>
-                    <span class="flex-1">${message}</span>
-                    <button onclick="this.parentElement.remove()" class="ml-4 text-white/70 hover:text-white transition-colors">
+                    <i class="${icons[type]} flex-shrink-0"></i>
+                    <span class="font-medium">${message}</span>
+                    <button onclick="this.parentElement.remove()" class="ml-auto text-white hover:text-gray-200">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
                 
-                toastContainer.appendChild(toast);
+                container.appendChild(toast);
                 
                 // Animate in
-                requestAnimationFrame(() => {
-                    toast.classList.remove('translate-x-full', 'opacity-0');
-                });
+                setTimeout(() => toast.classList.remove('translate-x-full'), 100);
                 
                 // Auto remove
                 setTimeout(() => {
-                    toast.classList.add('translate-x-full', 'opacity-0');
-                    setTimeout(() => toast.remove(), 300);
+                    if (toast.parentElement) {
+                        toast.classList.add('translate-x-full');
+                        setTimeout(() => toast.remove(), 300);
+                    }
                 }, duration);
             },
             
-            // Create toast container if it doesn't exist
-            createToastContainer: function() {
-                const container = document.createElement('div');
-                container.id = 'toast-container';
-                container.className = 'fixed top-6 right-6 z-[9999] space-y-3 max-w-sm';
-                document.body.appendChild(container);
+            // Get or create toast container
+            getToastContainer: function() {
+                let container = document.getElementById('toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'toast-container';
+                    container.className = 'fixed top-6 right-6 z-[9999] space-y-3 max-w-sm';
+                    document.body.appendChild(container);
+                }
                 return container;
             },
             
@@ -308,6 +317,14 @@
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Ensure all modals are hidden on page load
+            document.querySelectorAll('.modal-backdrop').forEach(modal => {
+                if (!modal.classList.contains('hidden')) {
+                    modal.classList.add('hidden');
+                }
+                modal.style.display = 'none';
+            });
+            
             // Add loading states to forms
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function() {
@@ -329,7 +346,9 @@
             // Add hover effects to cards
             document.querySelectorAll('.task-card, .glass').forEach(card => {
                 card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-4px)';
+                    if (window.innerWidth > 768) { // Only on desktop
+                        this.style.transform = 'translateY(-4px)';
+                    }
                 });
                 
                 card.addEventListener('mouseleave', function() {
@@ -355,6 +374,8 @@
             document.querySelectorAll('.modal-backdrop').forEach(modal => {
                 observer.observe(modal, { attributes: true });
             });
+            
+            console.log('✅ Jarvis AI Assistant initialized successfully');
         });
         
         // Performance optimization
