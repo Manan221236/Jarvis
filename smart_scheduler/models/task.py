@@ -69,3 +69,28 @@ class Task(Base):
     
     def __repr__(self):
         return f"<Task(id={self.id}, title='{self.title}', status='{self.status}')>"
+
+    def to_dict(self):
+        return {
+            "id": getattr(self, "id", None),
+            "title": getattr(self, "title", None),
+            "description": getattr(self, "description", None),
+            "priority": self.priority.value if getattr(self, "priority", None) is not None else None,
+            "category": getattr(self, "category", None),
+            "estimated_duration": getattr(self, "estimated_duration", None),
+            "due_date": self.due_date.isoformat() if getattr(self, "due_date", None) is not None else None,
+            "status": self.status.value if getattr(self, "status", None) is not None else None,
+            "progress_percentage": getattr(self, "progress_percentage", None),
+            "created_at": self.created_at.isoformat() if getattr(self, "created_at", None) is not None else None,
+            "actual_duration": getattr(self, "actual_duration", None),
+            "completed_at": self.completed_at.isoformat() if getattr(self, "completed_at", None) is not None else None,
+            "tags": getattr(self, "tags", None),
+            "updated_at": self.updated_at.isoformat() if getattr(self, "updated_at", None) is not None else None,
+            "scheduled_start_time": self.scheduled_start_time.isoformat() if getattr(self, "scheduled_start_time", None) is not None else None,
+            "scheduled_end_time": self.scheduled_end_time.isoformat() if getattr(self, "scheduled_end_time", None) is not None else None,
+            "project_id": getattr(self, "project_id", None),
+            "recurrence": self.recurrence.value if getattr(self, "recurrence", None) is not None else None,
+            "recurrence_end_date": self.recurrence_end_date.isoformat() if getattr(self, "recurrence_end_date", None) is not None else None,
+            "energy_level_required": getattr(self, "energy_level_required", None),
+            "focus_level_required": getattr(self, "focus_level_required", None)
+        }

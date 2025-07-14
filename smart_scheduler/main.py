@@ -191,11 +191,20 @@ def tasks_page(request: Request, db: Session = Depends(get_db)):
     
     task_service = TaskService(db)
     tasks = task_service.get_tasks()
+    tasks_dicts = [task.to_dict() for task in tasks]
     
     return templates.TemplateResponse("tasks.html", {
         "request": request,
-        "tasks": tasks,
+        "tasks": tasks_dicts,
         "page_title": "Tasks"
+    })
+
+@app.get("/schedule", response_class=HTMLResponse)
+def schedule_page(request: Request):
+    """Schedule/calendar page"""
+    return templates.TemplateResponse("schedule.html", {
+        "request": request,
+        "page_title": "Schedule"
     })
 
 @app.get("/api/health")
@@ -496,6 +505,13 @@ def pause_task(task_id: int, db: Session = Depends(get_db)):
         "message": "Task paused successfully",
         "task_id": task_id
     }
+
+# Import the deadline router
+from smart_scheduler.api.routes import deadline_router, schedule_router, notification_router, task_router
+app.include_router(deadline_router)
+app.include_router(schedule_router)
+app.include_router(notification_router)
+app.include_router(task_router)
 
 def run_server():
     """Run the FastAPI server with proper import string for reload"""

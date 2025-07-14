@@ -1,0 +1,99 @@
+<!-- Shared Task Modal Partial -->
+<div id="task-modal" class="modal-backdrop hidden">
+    <div class="modal-content bg-gray-900/95 backdrop-blur-xl rounded-2xl p-8 max-w-2xl w-full mx-4 border border-white/10">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modal-title" class="text-2xl font-bold text-white">Create New Task</h3>
+            <button onclick="closeModal('task-modal')" class="text-gray-400 hover:text-white transition-colors p-2">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="task-form" class="space-y-6">
+            <input type="hidden" name="task_id" id="task-id">
+            <!-- Type Selector -->
+            <div id="type-selector-row" style="display:none;">
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    <i class="fas fa-layer-group mr-2 text-blue-400"></i>Type
+                </label>
+                <select id="task-type" name="type" class="form-input">
+                    <option value="task">Task</option>
+                    <option value="deadline">Deadline</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    <i class="fas fa-tasks mr-2 text-blue-400"></i>Task Title *
+                </label>
+                <input type="text" id="task-title" name="title" required
+                       class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Enter a clear, actionable task title..." maxlength="200">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    <i class="fas fa-calendar-alt mr-2 text-blue-400"></i>Due Date & Time *
+                </label>
+                <input type="text" id="task-due-date" name="due_date" required
+                       class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Select due date and time">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">
+                    <i class="fas fa-align-left mr-2 text-blue-400"></i>Description
+                </label>
+                <textarea id="task-description" name="description" rows="4"
+                          class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Describe what needs to be accomplished..." maxlength="1000"></textarea>
+                <div class="text-xs text-gray-500 mt-1">
+                    <span id="description-counter">0</span>/1000 characters
+                </div>
+            </div>
+            <!-- Task-specific fields -->
+            <div id="task-fields" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-flag mr-2 text-blue-400"></i>Priority
+                    </label>
+                    <select id="task-priority" name="priority" 
+                            class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="low">🟢 Low Priority</option>
+                        <option value="medium" selected>🟡 Medium Priority</option>
+                        <option value="high">🔴 High Priority</option>
+                        <option value="urgent">🚨 Urgent</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-folder mr-2 text-blue-400"></i>Category
+                    </label>
+                    <input type="text" id="task-category" name="category" 
+                           class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="e.g., work, personal">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">
+                        <i class="fas fa-clock mr-2 text-blue-400"></i>Duration (minutes)
+                    </label>
+                    <input type="number" id="task-duration" name="estimated_duration" min="1" 
+                           class="w-full bg-gray-800/50 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="30">
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-6 border-t border-white/10">
+                <div>
+                    <button type="button" id="delete-btn" class="btn-danger hidden">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </button>
+                </div>
+                <div class="flex gap-4">
+                    <button type="button" onclick="closeModal('task-modal')" 
+                            class="px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-800 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" id="submit-btn" 
+                            class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all">
+                        <i class="fas fa-save mr-2"></i>Create Task
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div> 

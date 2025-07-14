@@ -195,3 +195,34 @@ class TaskService:
             .order_by(Task.scheduled_start_time.asc())
             .all()
         )
+
+    def get_tasks_plain(self, start_date=None, end_date=None):
+        from datetime import timezone
+        tasks = self.get_tasks()
+        result = []
+        for t in tasks:
+            if not t.due_date:
+                continue
+            # Ensure all datetimes are offset-aware (UTC)
+            due_date = t.due_date
+            if due_date.tzinfo is None:
+                due_date = due_date.replace(tzinfo=timezone.utc)
+            s_date = start_date
+            e_date = end_date
+            if s_date and s_date.tzinfo is None:
+                s_date = s_date.replace(tzinfo=timezone.utc)
+            if e_date and e_date.tzinfo is None:
+                e_date = e_date.replace(tzinfo=timezone.utc)
+            if (not s_date or due_date >= s_date) and (not e_date or due_date <= e_date):
+                result.append({
+                    "id": t.id,
+                    "title": t.title,
+                    "due_date": t.due_date,
+                    "color": "#3B82F6",
+                    "status": t.status.value if hasattr(t.status, 'value') else str(t.status),
+                    "completed": (t.status == 'completed' or (hasattr(t.status, 'value') and t.status.value == 'completed')),
+                    "category": t.category,
+                    "project_id": t.project_id,
+                    "recurrence": t.recurrence.value if hasattr(t.recurrence, 'value') else str(t.recurrence)
+                })
+        return result

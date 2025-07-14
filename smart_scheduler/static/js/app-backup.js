@@ -248,6 +248,8 @@ class JarvisApp {
         // Reset form elements
         const elements = {
             'task-id': '',
+            'task-title': '',
+            'task-due-date': '',
             'modal-title': 'Create New Task',
             'submit-btn': '<i class="fas fa-save mr-2"></i>Create Task'
         };
@@ -255,7 +257,7 @@ class JarvisApp {
         Object.entries(elements).forEach(([id, value]) => {
             const element = document.getElementById(id);
             if (element) {
-                if (element.tagName === 'INPUT') {
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
                     element.value = value;
                 } else {
                     element.innerHTML = value;
@@ -269,8 +271,11 @@ class JarvisApp {
 
     async handleTaskSubmit(event) {
         const formData = new FormData(event.target);
+        const dueDateRaw = formData.get('due_date');
+        const dueDate = dueDateRaw ? new Date(dueDateRaw).toISOString() : null;
         const taskData = {
             title: formData.get('title'),
+            due_date: dueDate, // Add due_date to payload
             description: formData.get('description') || null,
             priority: formData.get('priority'),
             category: formData.get('category') || null,
@@ -313,6 +318,7 @@ class JarvisApp {
             const fields = {
                 'task-id': task.id,
                 'task-title': task.title,
+                'task-due-date': task.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
                 'task-description': task.description || '',
                 'task-priority': task.priority,
                 'task-category': task.category || '',
